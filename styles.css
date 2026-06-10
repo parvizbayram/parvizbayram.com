@@ -1,0 +1,450 @@
+:root {
+  --black: #0f0f0f;
+  --white: #ffffff;
+  --grey: #777d83;
+  --blue: #76b9ef;
+  --gradient-blue: #2f8cd5;
+  --gradient-light: #a0d5ff;
+  --card-shadow: 0 117px 50px rgba(15, 15, 15, 0.5);
+  --page-scale: 1;
+  --loop-distance: 5385px;
+  --loop-offset: 0px;
+  --tilt-rotate-x: 0deg;
+  --tilt-rotate-y: 0deg;
+  --tilt-translate-x: 0px;
+  --tilt-translate-y: 0px;
+  --tilt-scale: 1;
+  --tilt-spotlight-x: 50%;
+  --tilt-spotlight-y: 50%;
+  --tilt-spotlight-opacity: 0;
+}
+
+@font-face {
+  font-family: "Aeonik Pro";
+  src: url("fonts/Aeonik Font Family/AeonikPro-Light.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Aeonik Pro";
+  src: url("fonts/Aeonik Font Family/AeonikPro-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Aeonik Pro";
+  src: url("fonts/Aeonik Font Family/AeonikPro-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Editorial New";
+  src: url("fonts/Editorial Font Family/EditorialNew-UltralightItalic.woff2") format("woff2");
+  font-weight: 200;
+  font-style: italic;
+  font-display: swap;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--black);
+  color: var(--white);
+  font-family: "Aeonik Pro", sans-serif;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--black);
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+.page-stage {
+  width: calc(1920px * var(--page-scale));
+  height: calc(1080px * var(--page-scale));
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.page-shell {
+  position: relative;
+  width: 1920px;
+  height: 1080px;
+  min-height: 1080px;
+  background: var(--black);
+  overflow: hidden;
+  transform: scale(var(--page-scale));
+  transform-origin: top left;
+}
+
+.site-header {
+  position: absolute;
+  z-index: 20;
+  top: 0;
+  left: 50px;
+  width: 1790px;
+  height: 100px;
+  mix-blend-mode: difference;
+  pointer-events: none;
+}
+
+.back-home {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: normal;
+  letter-spacing: 0.36px;
+  text-transform: uppercase;
+  color: var(--white);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.intro-mark {
+  position: absolute;
+  top: 50px;
+  left: 0;
+  margin: 0;
+  font-size: 32px;
+  font-weight: 400;
+  line-height: normal;
+  letter-spacing: 0.64px;
+  color: var(--blue);
+  white-space: nowrap;
+}
+
+.main-nav {
+  position: absolute;
+  top: 60px;
+  right: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 60px;
+  height: 40px;
+  pointer-events: auto;
+}
+
+.nav-link {
+  position: relative;
+  display: flex;
+  height: 40px;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  padding-bottom: 2px;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0.36px;
+  color: var(--white);
+  white-space: nowrap;
+}
+
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  width: 130%;
+  height: 1px;
+  background: currentColor;
+  opacity: 0;
+  transform: translate(-50%, 18px);
+  transform-origin: center center;
+  transition: transform 260ms ease, opacity 260ms ease, width 260ms ease;
+}
+
+.nav-link:hover::after,
+.nav-link:focus-visible::after {
+  left: 50%;
+  width: 105%;
+  transform: translate(-50%, 0);
+  opacity: 1;
+}
+
+.hero {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  width: 1920px;
+  height: 1080px;
+  pointer-events: none;
+  isolation: isolate;
+}
+
+.works-marquee {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.works-track {
+  position: absolute;
+  inset: 0;
+  width: 1920px;
+  height: calc(1200px + (var(--loop-distance) * 2));
+  transform: translateY(calc(var(--loop-offset) * -1));
+  will-change: transform;
+  pointer-events: auto;
+}
+
+.hero-title {
+  position: absolute;
+  top: 858px;
+  left: 32px;
+  width: 726px;
+  margin: 0;
+  font-family: "Editorial New", serif;
+  font-size: 120px;
+  font-style: italic;
+  font-weight: 200;
+  line-height: 1.2;
+  letter-spacing: 0;
+  white-space: nowrap;
+  color: transparent;
+  background: linear-gradient(180deg, var(--gradient-blue) 8.681%, var(--gradient-light) 88.542%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-shadow: 0 0 10px var(--gradient-blue);
+}
+
+.hero-copy {
+  position: absolute;
+  top: 888px;
+  left: 412px;
+  width: 1249px;
+  margin: 0;
+  font-size: 80px;
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-align: right;
+  color: var(--grey);
+  white-space: nowrap;
+}
+
+.hero-copy span {
+  display: block;
+}
+
+.works {
+  position: absolute;
+  z-index: 2;
+  top: 1200px;
+  left: 50px;
+  width: 1820px;
+  height: 4185px;
+  pointer-events: auto;
+}
+
+.works.is-clone {
+  top: calc(1200px + var(--loop-distance));
+}
+
+.project-card {
+  position: absolute;
+  display: block;
+  width: 875px;
+  height: 753px;
+  color: var(--white);
+  isolation: isolate;
+  transform-style: preserve-3d;
+  transform: perspective(1400px) translate3d(var(--tilt-translate-x), var(--tilt-translate-y), 0)
+    rotateX(var(--tilt-rotate-x)) rotateY(var(--tilt-rotate-y)) scale(var(--tilt-scale));
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 220ms ease;
+  will-change: transform;
+}
+
+.project-card > * {
+  position: absolute;
+  z-index: 3;
+}
+
+.project-card.is-tilting {
+  transition: none;
+}
+
+.project-thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 875px;
+  height: 656px;
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow: var(--card-shadow);
+  background: #050505;
+  transform: translateZ(24px);
+}
+
+.project-thumb::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 10px;
+  background: radial-gradient(
+    circle at var(--tilt-spotlight-x) var(--tilt-spotlight-y),
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.035) 34%,
+    rgba(255, 255, 255, 0.018) 55%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  opacity: var(--tilt-spotlight-opacity);
+  mix-blend-mode: screen;
+  filter: blur(26px);
+  pointer-events: none;
+  z-index: 2;
+  transition: opacity 180ms ease;
+  will-change: filter, opacity, background-position;
+}
+
+.project-thumb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: var(--black);
+  opacity: calc(1 - var(--tilt-spotlight-opacity));
+  pointer-events: none;
+  z-index: 1;
+}
+
+.project-thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.project-card h2 {
+  position: absolute;
+  top: 686px;
+  left: 10px;
+  margin: 0;
+  font-size: 36px;
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: 0.72px;
+  color: var(--white);
+  white-space: nowrap;
+  transform: translateZ(8px);
+  background: var(--black);
+}
+
+.project-card p {
+  position: absolute;
+  top: 732px;
+  left: 10px;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.36px;
+  color: var(--grey);
+  white-space: nowrap;
+  transform: translateZ(6px);
+  background: var(--black);
+}
+
+.project-card[href] {
+  cursor: pointer;
+}
+
+.project-card:hover,
+.project-card:focus-visible,
+.project-card.is-tilting {
+  box-shadow: 0 125px 56px rgba(15, 15, 15, 0.56);
+}
+
+.project-aerosure {
+  top: 0;
+  left: 0;
+}
+
+.project-baku {
+  top: 328px;
+  left: 945px;
+}
+
+.project-pedalchi {
+  top: 1144px;
+  left: 0;
+}
+
+.project-straudo {
+  top: 1472px;
+  left: 945px;
+}
+
+.project-manaw {
+  top: 2288px;
+  left: 0;
+}
+
+.project-orkestra {
+  top: 2616px;
+  left: 945px;
+}
+
+.project-talktocanada {
+  top: 3432px;
+  left: 472px;
+}
+
+.crop-baku {
+  width: 129.68%;
+  height: 107.98%;
+  left: -14.84%;
+  top: -7.98%;
+  max-width: none;
+}
+
+.crop-pedalchi {
+  object-fit: cover;
+  object-position: bottom;
+}
+
+.crop-manaw {
+  width: 100.04%;
+  height: 102.82%;
+  left: -0.02%;
+  top: 0;
+  max-width: none;
+}
+
+.crop-talktocanada {
+  width: 100.16%;
+  height: 104.46%;
+  left: -0.08%;
+  top: -0.94%;
+  max-width: none;
+}
+
+.crop-orkestra {
+  width: 133.33%;
+  height: 100%;
+  left: -18.42%;
+  top: 0;
+  max-width: none;
+}
