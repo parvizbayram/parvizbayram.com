@@ -4,7 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Straudo - Parviz Portfolio</title>
-    <link rel="stylesheet" href="/styles.css?v=straudo-static-1">
+    <script src="/scale-init.js?v=scale-init-1"></script>
+    <link rel="preload" href="/fonts/Aeonik%20Font%20Family/Variable/AeonikPro-Regular.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="/fonts/Aeonik%20Font%20Family/Variable/AeonikPro-RegularItalic.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="/fonts/Editorial%20Font%20Family/EditorialNew-UltralightItalic.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/straudo/straudo-1.webp" as="image" type="image/webp" fetchpriority="high">
+    <link rel="stylesheet" href="/styles.css?v=straudo-next-project-3">
   </head>
   <body class="straudo-body">
     <header class="site-header bio-header straudo-header" data-name="header">
@@ -32,7 +37,7 @@
 
         <section class="case-flow straudo-content" aria-label="Straudo case study">
           <div class="work-media case-media case-media-standalone straudo-media" style="--media-h: 975px;">
-            <img class="work-img" src="/assets/straudo/straudo-1.webp" alt="Straudo branding visual 1" decoding="async" fetchpriority="high">
+            <img class="work-img" src="/assets/straudo/straudo-1.webp" alt="Straudo branding visual 1" loading="eager" decoding="sync" fetchpriority="high">
           </div>
 
           <div class="straudo-copy-columns" aria-label="Straudo naming, logotype and color notes">
@@ -55,7 +60,7 @@
             <img class="work-img" src="/assets/straudo/straudo-2.webp" alt="Straudo branding visual 2" loading="lazy" decoding="async">
           </div>
 
-          <p class="work-copy work-copy-light case-copy straudo-case-copy" style="--copy-w: 600px;">
+          <p class="work-copy work-copy-light case-copy straudo-case-copy straudo-logo-design-copy" style="--copy-w: 600px;">
             During the logo design process, I chose to use a friendlier typography with rounded corners, like on the "t", "u", and "d" letters, instead of unfeeling fonts like Helvetica or Univers.
             <br>
             I also made the logo look more trustworthy and durable by straightening the legs of the "a," "u," and "d" letters so they would stand confidently.
@@ -79,7 +84,7 @@
             </div>
           </div>
 
-          <p class="work-copy work-copy-light case-copy straudo-case-copy" style="--copy-w: 600px;">
+          <p class="work-copy work-copy-light case-copy straudo-case-copy straudo-logo-design-copy" style="--copy-w: 600px;">
             Also, I've used a ligature between the "r" and "a" letters. Since Straudo comes from the words "strategy" and "audio," I've connected the last letter of the former and the first letter of the latter with a ligature. Ligatures of the "r" and "a" are commonly used in serif fonts, but almost never in sans serif fonts before Straudo. Therefore, we can confidently claim that Straudo is the only sans serif logotype in the world that uses this ligature. Additionally, thorough research of currently active company logos revealed no other company using this technique. Therefore, it is a great way to stand out.
           </p>
 
@@ -113,12 +118,29 @@
             </div>
           </div>
 
-          <button class="work-scroll-top" type="button" data-straudo-scroll-top>SCROLL TO TOP</button>
+          <section class="next-project-panel straudo-next-project-panel" data-next-project aria-label="Next project">
+            <a class="next-project-link" data-next-project-link href="#">
+              <span class="next-project-eyebrow" data-next-project-eyebrow>WHAT'S NEXT?</span>
+              <div class="next-project-preview-host" data-next-project-preview-host></div>
+            </a>
+            <span class="next-project-cursor" data-next-project-cursor aria-hidden="true">
+              <span>Next</span>
+              <span>Project</span>
+            </span>
+          </section>
         </section>
       </main>
     </div>
 
+    <template
+      data-next-project-preview
+      data-intro-selector=".case-intro"
+      data-media-selector=".case-flow .case-media"
+      data-preview-class="straudo-next-project-preview"
+    ></template>
+
     <script src="/standalone-nav.js?v=works-position-memory-1"></script>
+    <script src="/next-project.js?v=next-project-pilot-5"></script>
     <script src="/straudo.js?v=straudo-static-1"></script>
   </body>
 </html>

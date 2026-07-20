@@ -3,8 +3,11 @@
   const root = document.documentElement;
 
   function syncContactScale() {
-    const scale = window.innerWidth < DESIGN_WIDTH ? window.innerWidth / DESIGN_WIDTH : 1;
-    root.style.setProperty("--page-scale", scale.toFixed(5));
+    const scale = typeof window.PortfolioScale?.sync === "function"
+      ? window.PortfolioScale.sync()
+      : window.innerWidth < DESIGN_WIDTH
+        ? window.innerWidth / DESIGN_WIDTH
+        : window.innerWidth / DESIGN_WIDTH;
   }
 
   function fallbackCopy(text) {
@@ -29,6 +32,7 @@
     }
 
     const email = button.dataset.copyEmail || button.textContent.trim();
+    const supportsHoverCursor = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
     const setBubblePosition = (event) => {
       const shellRect = (shell || button).getBoundingClientRect();
       const scale = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--page-scale")) || 1;
@@ -42,6 +46,21 @@
       bubble.style.setProperty("--bubble-y", `${y.toFixed(2)}px`);
       bubble.style.setProperty("--bubble-offset-x", "-22px");
       bubble.style.setProperty("--bubble-offset-y", `${Math.max(-3, Math.min(3, (event.clientY - shellRect.top) / shellRect.height * 6 - 3)).toFixed(2)}px`);
+    };
+    const setBubbleToButtonCenter = () => {
+      const shellRect = (shell || button).getBoundingClientRect();
+      const buttonRect = button.getBoundingClientRect();
+      const scale = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--page-scale")) || 1;
+      if (!shellRect.width || !shellRect.height || !buttonRect.width || !scale) {
+        return;
+      }
+
+      const x = (buttonRect.left + buttonRect.width / 2 - shellRect.left) / scale;
+      const y = (buttonRect.top + buttonRect.height / 2 - shellRect.top) / scale;
+      bubble.style.setProperty("--bubble-x", `${x.toFixed(2)}px`);
+      bubble.style.setProperty("--bubble-y", `${y.toFixed(2)}px`);
+      bubble.style.setProperty("--bubble-offset-x", "0px");
+      bubble.style.setProperty("--bubble-offset-y", "-76px");
     };
     const show = () => {
       bubble.classList.add("is-visible");
@@ -75,18 +94,26 @@
           // Keep the visual feedback responsive even if the browser blocks clipboard access.
         }
       } finally {
+        if (!supportsHoverCursor) {
+          setBubbleToButtonCenter();
+        }
         show();
         bubble.classList.add("is-copied");
+        if (!supportsHoverCursor) {
+          window.setTimeout(reset, 900);
+        }
       }
     });
 
-    button.addEventListener("pointerenter", show);
-    button.addEventListener("pointermove", (event) => {
-      setBubblePosition(event);
-      show();
-    });
-    button.addEventListener("mouseleave", reset);
-    button.addEventListener("blur", reset);
+    if (supportsHoverCursor) {
+      button.addEventListener("pointerenter", show);
+      button.addEventListener("pointermove", (event) => {
+        setBubblePosition(event);
+        show();
+      });
+      button.addEventListener("mouseleave", reset);
+      button.addEventListener("blur", reset);
+    }
   }
 
   syncContactScale();

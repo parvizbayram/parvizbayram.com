@@ -3,7 +3,6 @@ const fs = require("fs");
 const path = require("path");
 
 const port = 3000;
-const host = "0.0.0.0";
 const root = __dirname;
 
 const mimeTypes = {
@@ -16,19 +15,44 @@ const mimeTypes = {
   ".jpeg": "image/jpeg",
   ".gif": "image/gif",
   ".webp": "image/webp",
+  ".ttf": "font/ttf",
   ".woff2": "font/woff2",
   ".json": "application/json; charset=utf-8",
-  ".mp3": "audio/mpeg"
+  ".mp3": "audio/mpeg",
+  ".mp4": "video/mp4"
 };
 
 function sendFile(request, response, filePath, stats) {
-  const contentType = mimeTypes[path.extname(filePath)] || "application/octet-stream";
+  const extension = path.extname(filePath);
+  const contentType = mimeTypes[extension] || "application/octet-stream";
+  const cacheableExtensions = new Set([
+    ".svg",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".webp",
+    ".ttf",
+    ".woff2",
+    ".mp3",
+    ".mp4"
+  ]);
+  const etag = `"${stats.size}-${Math.floor(stats.mtimeMs)}"`;
   const headers = {
     "Content-Type": contentType,
-    "Cache-Control": "no-store",
+    "Cache-Control": cacheableExtensions.has(extension)
+      ? "public, max-age=3600, must-revalidate"
+      : "no-cache",
+    "ETag": etag,
     "Accept-Ranges": "bytes"
   };
   const range = request.headers.range;
+
+  if (!range && request.headers["if-none-match"] === etag) {
+    response.writeHead(304, headers);
+    response.end();
+    return;
+  }
 
   if (range) {
     const match = range.match(/^bytes=(\d*)-(\d*)$/);
@@ -143,6 +167,6 @@ const server = http.createServer((request, response) => {
   });
 });
 
-server.listen(port, host, () => {
+server.listen(port, () => {
   console.log(`Portfolio site running at http://localhost:${port}`);
 });

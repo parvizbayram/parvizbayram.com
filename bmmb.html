@@ -4,6 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Baku Museum of Miniature Books - Parviz Portfolio</title>
+    <script src="/scale-init.js?v=scale-init-1"></script>
+    <link rel="preload" href="/fonts/Aeonik%20Font%20Family/Variable/AeonikPro-Regular.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="/fonts/Aeonik%20Font%20Family/Variable/AeonikPro-RegularItalic.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="/fonts/Editorial%20Font%20Family/EditorialNew-UltralightItalic.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/bmmb/bmmb-01.webp" as="image" type="image/webp" fetchpriority="high">
     <link rel="stylesheet" href="/styles.css?v=flow-scroll-4">
   </head>
   <body class="bmmb-body">
@@ -32,10 +37,10 @@
 
         <section class="case-flow bmmb-content" aria-label="Baku Museum of Miniature Books case study">
           <div class="work-media case-media bmmb-media" style="--media-h: 1033px;">
-            <img class="work-img" src="/assets/bmmb/bmmb-01.webp" alt="Baku Museum of Miniature Books branding visual 1" decoding="async" fetchpriority="high">
+            <img class="work-img" src="/assets/bmmb/bmmb-01.webp" alt="Baku Museum of Miniature Books branding visual 1" loading="eager" decoding="sync" fetchpriority="high">
           </div>
 
-          <p class="work-copy work-copy-light case-copy bmmb-case-copy" style="--copy-w: 580px;">
+          <p class="work-copy work-copy-light case-copy bmmb-case-copy bmmb-primary-copy" style="--copy-w: 580px;">
             The branding was designed for the world’s only museum of miniature books. Baku Museum of Miniature Books was listed in the Guinness Book of Records as the largest collection of miniature books in the world. There are different types and sizes of books starting from 100x100 mm to 10x10 mm in the museum.
             <br><br>
             Considering the variety and non-standard sizes of these miniature books, we have designed a unique logo that shows these properties. In the logo, the books seem to be laid out on top of each other, and its adaptability lies in the fact that these “books” can be laid out next to each other too.
@@ -81,12 +86,29 @@
           </div>
           </div>
 
-          <button class="work-scroll-top" type="button" data-bmmb-scroll-top>SCROLL TO TOP</button>
+          <section class="next-project-panel" data-next-project hidden aria-label="Next project">
+            <a class="next-project-link" data-next-project-link href="#">
+              <span class="next-project-eyebrow" data-next-project-eyebrow>WHAT'S NEXT?</span>
+              <div class="next-project-preview-host" data-next-project-preview-host></div>
+            </a>
+            <span class="next-project-cursor" data-next-project-cursor aria-hidden="true">
+              <span>Next</span>
+              <span>Project</span>
+            </span>
+          </section>
         </section>
       </main>
     </div>
 
+    <template
+      data-next-project-preview
+      data-intro-selector=".case-intro"
+      data-media-selector=".case-flow > .case-media"
+      data-preview-class="bmmb-next-project-preview"
+    ></template>
+
     <script src="/standalone-nav.js?v=works-position-memory-1"></script>
+    <script src="/next-project.js?v=next-project-pilot-5"></script>
     <script src="/bmmb.js?v=bmmb-static-1"></script>
   </body>
 </html>

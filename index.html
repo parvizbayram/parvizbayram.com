@@ -17,7 +17,12 @@
         document.documentElement.classList.remove('has-pending-bio-entry');
       }
     </script>
-    <link rel="stylesheet" href="/styles.css?v=shared-transition-shell-1">
+    <script src="/scale-init.js?v=scale-init-1"></script>
+    <link rel="preload" href="/assets/main/background.webp" as="image" type="image/webp" fetchpriority="high">
+    <link rel="preload" href="/fonts/Aeonik%20Font%20Family/Variable/AeonikPro-Regular.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="/fonts/Aeonik%20Font%20Family/Variable/AeonikPro-RegularItalic.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="/fonts/Editorial%20Font%20Family/EditorialNew-UltralightItalic.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/styles.css?v=main-bg-video-fallback-1">
   </head>
   <body data-route="main">
     <header class="site-header bio-header route-bio-header" data-node-id="53:111" data-name="header">
@@ -40,6 +45,12 @@
     <div class="route-panel route-main" data-route-panel="main">
       <div class="page-stage">
         <main class="page-shell" data-node-id="5:2" data-name="main page">
+          <div class="main-shell-background" aria-hidden="true">
+            <video autoplay muted loop playsinline preload="auto" poster="/assets/main/background.webp">
+              <source src="/assets/main/background.webm" type="video/webm">
+            </video>
+          </div>
+
           <header class="site-header" data-node-id="53:113" data-name="header">
             <a class="back-home" href="/" aria-label="Back to homepage" data-route-link data-route-target="main">Back to homepage</a>
             <p class="intro-mark" data-node-id="384:153">Hey! I am Parviz</p>
@@ -62,6 +73,13 @@
               <span>based in the Netherlands</span>
               <span>shaping brands and digital products</span>
             </p>
+            <div class="tablet-hero-copy" aria-hidden="true">
+              <div class="tablet-hero-line">
+                <span class="tablet-hero-title">Visual Designer</span>
+                <span class="tablet-hero-grey">based in the Netherlands</span>
+              </div>
+              <div class="tablet-hero-second">shaping brands and digital products</div>
+            </div>
           </section>
 
           <div class="works-marquee" aria-hidden="true">
@@ -174,6 +192,13 @@
               <span>based in the Netherlands</span>
               <span>shaping brands and digital products</span>
             </p>
+            <div class="tablet-hero-copy" aria-hidden="true">
+              <div class="tablet-hero-line">
+                <span class="tablet-hero-title">Visual Designer</span>
+                <span class="tablet-hero-grey">based in the Netherlands</span>
+              </div>
+              <div class="tablet-hero-second">shaping brands and digital products</div>
+            </div>
           </section>
 
           <figure class="bio-photo" data-node-id="93:4" data-name="my photo">
@@ -314,6 +339,6 @@
       </div>
     </div>
 
-    <script src="/script.js?v=shared-transition-shell-1"></script>
+    <script src="/script.js?v=main-bg-video-fallback-1"></script>
   </body>
 </html>

@@ -1,10 +1,11 @@
 function syncPageScale() {
   const designWidth = 1920;
   const viewportWidth = window.innerWidth;
-  const scale = viewportWidth < designWidth ? viewportWidth / designWidth : 1;
-  document.documentElement.style.setProperty("--page-scale", scale.toString());
-  document.documentElement.style.setProperty("--bio-viewport-half", `${window.innerHeight / (2 * scale)}px`);
-  document.documentElement.style.setProperty("--bio-footer-gap", `${80 / scale}px`);
+  const scale = typeof window.PortfolioScale?.sync === "function"
+    ? window.PortfolioScale.sync()
+    : viewportWidth < designWidth
+      ? viewportWidth / designWidth
+      : viewportWidth / designWidth;
   return scale;
 }
 
@@ -12,7 +13,6 @@ const WORKS_REVEAL_KEY = "parviz:works-reveal";
 const WORKS_POSITION_KEY = "parviz:works-position";
 
 const WORKS_LAYOUT = {
-  sectionTop: 1200,
   revealTop: 120,
   revealDuration: 520,
   cardHeight: 753,
@@ -23,21 +23,59 @@ const WORKS_LAYOUT = {
   stagger: 328,
 };
 
+function getDesignVar(name, fallback) {
+  const value = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name));
+  return Number.isFinite(value) ? value : fallback;
+}
+
+function getWorksLayout() {
+  return {
+    revealTop: getDesignVar("--works-reveal-top", WORKS_LAYOUT.revealTop),
+    revealDuration: WORKS_LAYOUT.revealDuration,
+    cardHeight: getDesignVar("--works-card-height", WORKS_LAYOUT.cardHeight),
+    leftColumn: getDesignVar("--works-left-column", WORKS_LAYOUT.leftColumn),
+    rightColumn: getDesignVar("--works-right-column", WORKS_LAYOUT.rightColumn),
+    centeredColumn: getDesignVar("--works-centered-column", WORKS_LAYOUT.centeredColumn),
+    rowStep: getDesignVar("--works-row-step", WORKS_LAYOUT.rowStep),
+    stagger: getDesignVar("--works-stagger", WORKS_LAYOUT.stagger),
+  };
+}
+
+function getWorksSectionTop() {
+  const value = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--viewport-height-design"));
+  return Number.isFinite(value) && value > 0 ? value : 1080;
+}
+
 function getLoopDistance() {
   const value = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--loop-distance"));
   return Number.isFinite(value) && value > 0 ? value : 5385;
+}
+
+function updateMainBackgroundScrollOpacity(offset) {
+  const viewportHeight = getWorksSectionTop();
+  const loopDistance = getLoopDistance();
+  const fadeDistance = viewportHeight * MAIN_BACKGROUND_FADE_COVERAGE;
+  const distanceFromFold = Math.min(offset, Math.max(0, loopDistance - offset));
+  const opacity = fadeDistance > 0
+    ? clamp(1 - distanceFromFold / fadeDistance, 0, 1)
+    : 1;
+
+  document.documentElement.style.setProperty("--main-bg-scroll-opacity", opacity.toFixed(4));
+  return opacity;
 }
 
 function syncLoopOffset(offset) {
   const loopDistance = getLoopDistance();
   const normalized = ((offset % loopDistance) + loopDistance) % loopDistance;
   document.documentElement.style.setProperty("--loop-offset", `${normalized}px`);
+  updateMainBackgroundScrollOpacity(normalized);
   return normalized;
 }
 
 function layoutWorksGrid() {
   const sections = Array.from(document.querySelectorAll(".works"));
   const sourceCards = Array.from(document.querySelectorAll(".works-source > .project-card"));
+  const layout = getWorksLayout();
 
   if (!sourceCards.length) {
     return;
@@ -55,22 +93,24 @@ function layoutWorksGrid() {
       const isRightColumn = index % 2 === 1;
       const isCenteredFinalCard = isOddCount && index === lastIndex;
       const left = isCenteredFinalCard
-        ? WORKS_LAYOUT.centeredColumn
+        ? layout.centeredColumn
         : isRightColumn
-          ? WORKS_LAYOUT.rightColumn
-          : WORKS_LAYOUT.leftColumn;
-      const top = pairIndex * WORKS_LAYOUT.rowStep + (isRightColumn ? WORKS_LAYOUT.stagger : 0);
+          ? layout.rightColumn
+          : layout.leftColumn;
+      const top = pairIndex * layout.rowStep + (isRightColumn ? layout.stagger : 0);
 
       card.style.left = `${left}px`;
       card.style.top = `${top}px`;
-      worksHeight = Math.max(worksHeight, top + WORKS_LAYOUT.cardHeight);
+      worksHeight = Math.max(worksHeight, top + layout.cardHeight);
     });
 
     section.style.height = `${worksHeight}px`;
   });
 
+  const sectionTop = getWorksSectionTop();
   document.documentElement.style.setProperty("--works-height", `${worksHeight}px`);
-  document.documentElement.style.setProperty("--loop-distance", `${WORKS_LAYOUT.sectionTop + worksHeight}px`);
+  document.documentElement.style.setProperty("--works-section-top", `${sectionTop}px`);
+  document.documentElement.style.setProperty("--loop-distance", `${sectionTop + worksHeight}px`);
 }
 
 function buildLoopedWorks() {
@@ -252,6 +292,53 @@ function handleWheel(event) {
   loopOffset = syncLoopOffset(loopOffset + delta * 1.05);
 }
 
+function initWorksTouchScroll() {
+  const shell = document.querySelector(".page-shell");
+  if (!shell) {
+    return;
+  }
+
+  let activePointerId = null;
+  let lastY = 0;
+  let lastX = 0;
+
+  shell.addEventListener("pointerdown", (event) => {
+    if (currentRoute !== ROUTE_MAIN || routeTransitioning || loopResetting || event.pointerType === "mouse") {
+      return;
+    }
+
+    activePointerId = event.pointerId;
+    lastY = event.clientY;
+    lastX = event.clientX;
+    shell.setPointerCapture?.(event.pointerId);
+  });
+
+  shell.addEventListener("pointermove", (event) => {
+    if (activePointerId !== event.pointerId || currentRoute !== ROUTE_MAIN || routeTransitioning || loopResetting) {
+      return;
+    }
+
+    event.preventDefault();
+    const deltaY = lastY - event.clientY;
+    const deltaX = lastX - event.clientX;
+    const dominantDelta = Math.abs(deltaY) >= Math.abs(deltaX) ? deltaY : deltaX;
+    loopOffset = syncLoopOffset(loopOffset + dominantDelta * 1.05);
+    lastY = event.clientY;
+    lastX = event.clientX;
+  }, { passive: false });
+
+  const endTouchScroll = (event) => {
+    if (activePointerId !== event.pointerId) {
+      return;
+    }
+    activePointerId = null;
+    shell.releasePointerCapture?.(event.pointerId);
+  };
+
+  shell.addEventListener("pointerup", endTouchScroll);
+  shell.addEventListener("pointercancel", endTouchScroll);
+}
+
 function easeInOutCustom(t) {
   return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 }
@@ -298,10 +385,67 @@ function initBioScrollControls() {
   });
 }
 
+function initMainBackgroundVideoFallback() {
+  const root = document.documentElement;
+  const video = document.querySelector(".main-shell-background video");
+
+  if (!video) {
+    root.classList.add("has-main-bg-video-fallback");
+    return;
+  }
+
+  let fallbackApplied = false;
+  let autoplayCheckId = 0;
+
+  const applyFallback = () => {
+    if (fallbackApplied) {
+      return;
+    }
+
+    fallbackApplied = true;
+    window.clearTimeout(autoplayCheckId);
+    root.classList.add("has-main-bg-video-fallback");
+    window.setTimeout(() => {
+      video.pause();
+      video.removeAttribute("src");
+      video.querySelectorAll("source").forEach((source) => source.removeAttribute("src"));
+      video.load();
+    }, 260);
+  };
+
+  const verifyAutoplay = () => {
+    window.clearTimeout(autoplayCheckId);
+    autoplayCheckId = window.setTimeout(() => {
+      if (!fallbackApplied && video.paused && video.currentTime < 0.05) {
+        applyFallback();
+      }
+    }, 1400);
+  };
+
+  video.addEventListener("error", applyFallback);
+  video.addEventListener("playing", () => {
+    window.clearTimeout(autoplayCheckId);
+  });
+
+  const playAttempt = video.play();
+  if (playAttempt && typeof playAttempt.catch === "function") {
+    playAttempt
+      .then(() => {
+        window.clearTimeout(autoplayCheckId);
+      })
+      .catch(applyFallback);
+  }
+
+  verifyAutoplay();
+}
+
 const ROUTE_MAIN = "main";
 const ROUTE_BIO = "bio";
 const ROUTE_TRANSITION_MS = 520;
+const MAIN_BACKGROUND_FADE_COVERAGE = 0.8;
+const MAIN_BACKGROUND_ROUTE_FADE_MS = 500;
 const MAIN_TO_BIO_LOOP_RESET_MS = 500;
+const BIO_TO_MAIN_SCROLL_TOP_MS = 750;
 const LOOP_TOP_TOLERANCE = 1;
 const BIO_ENTRY_TRANSITION_KEY = "parviz:bio-entry-transition";
 const BIO_ENTRY_TRANSITION_PARAM = "bioEntry";
@@ -457,7 +601,7 @@ function getNearestLoopTarget(targetOffset) {
 
 function animateMainLoopToWorks(duration = WORKS_LAYOUT.revealDuration) {
   window.scrollTo(0, 0);
-  const targetOffset = WORKS_LAYOUT.sectionTop - WORKS_LAYOUT.revealTop;
+  const targetOffset = getWorksSectionTop() - WORKS_LAYOUT.revealTop;
 
   if (currentRoute !== ROUTE_MAIN || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     loopOffset = syncLoopOffset(targetOffset);
@@ -504,6 +648,10 @@ function updateRouteClasses(route) {
   document.body.classList.toggle("bio-body", isBio);
   document.body.classList.toggle("main-body", !isBio);
 
+  if (!document.documentElement.classList.contains("is-route-transitioning")) {
+    document.documentElement.style.setProperty("--main-bg-route-opacity", isBio ? "0" : "1");
+  }
+
   const mainPanel = document.querySelector('.route-panel[data-route-panel="main"]');
   const bioPanel = document.querySelector('.route-panel[data-route-panel="bio"]');
 
@@ -523,6 +671,10 @@ function updateRouteClasses(route) {
   window.scrollTo(0, 0);
   currentRoute = route;
   requestBioScrollSync();
+}
+
+function syncRouteBackgroundOpacity(route = currentRoute) {
+  document.documentElement.style.setProperty("--main-bg-route-opacity", route === ROUTE_BIO ? "0" : "1");
 }
 
 function applyRoute(route, options = {}) {
@@ -615,13 +767,17 @@ let bioRevealGroups = [];
 let bioLogoGroup = null;
 let bioLogoItems = [];
 let bioLogoPrerequisiteGroup = null;
+let bioLogoRevealStartedAt = 0;
+let bioLogoRevealCompleted = false;
 let bioScrollRafId = 0;
 let bioScrollListening = false;
 const BIO_LOGO_FADE_MS = 500;
 const BIO_LOGO_OVERLAP_MS = 400;
 const BIO_LOGOS_PER_ROW = 6;
-const BIO_LOGO_SEQUENCE_START_MS = 300;
-const BIO_SKILLS_SPEED_MULTIPLIER = 0.8;
+const BIO_LOGO_SEQUENCE_START_MS = 240;
+const BIO_SKILLS_SPEED_MULTIPLIER = 0.6;
+const BIO_TEXT_SPEED_MULTIPLIER = 2;
+const BIO_ENDING_SEQUENCE_WAIT_MS = 240;
 
 function createBioLineMarkup(group) {
   const blockSelector = ".bio-text p, .bio-skills p, .bio-quote-kicker, .bio-quote blockquote";
@@ -690,6 +846,7 @@ function buildBioScrollLines() {
       allLinesRevealed: false,
       revealStartedAt: 0,
       revealCompleted: false,
+      whiteCompleted: false,
     }))
     .filter((group) => group.lines.length)
     .sort((a, b) => a.sequence - b.sequence);
@@ -697,6 +854,8 @@ function buildBioScrollLines() {
   bioLogoGroup = document.querySelector("[data-bio-logo-group]");
   bioLogoItems = Array.from(document.querySelectorAll("[data-bio-logo-item]"));
   bioLogoPrerequisiteGroup = bioRevealGroups.find((group) => group.sequence === 6) || null;
+  bioLogoRevealStartedAt = bioLogoGroup?.classList.contains("is-revealed") ? performance.now() - getBioLogoRevealDuration() : 0;
+  bioLogoRevealCompleted = bioLogoGroup?.classList.contains("is-revealed") || false;
   bioLogoItems.forEach((logo, index) => {
     const step = BIO_LOGO_FADE_MS - BIO_LOGO_OVERLAP_MS;
     const delay = BIO_LOGO_SEQUENCE_START_MS + (index * step);
@@ -767,7 +926,7 @@ function revealLine(line, mode, lineIndex = 0, speedMultiplier = 1) {
   return true;
 }
 
-function revealGroup(group, now, mode) {
+function revealGroup(group, now, mode, speedMultiplier = 1) {
   if (group.loaded) {
     return;
   }
@@ -777,7 +936,7 @@ function revealGroup(group, now, mode) {
   group.revealCompleted = mode === "instant";
 
   group.lines.forEach((line, lineIndex) => {
-    revealLine(line, mode, lineIndex);
+    revealLine(line, mode, lineIndex, speedMultiplier);
   });
 }
 
@@ -786,11 +945,53 @@ function revealBioLogos(mode = "normal") {
     return;
   }
 
+  const now = performance.now();
+  const wasRevealed = bioLogoGroup.classList.contains("is-revealed");
+
   bioLogoGroup.classList.add("is-revealed");
   bioLogoItems.forEach((logo) => {
     logo.classList.add("is-logo-revealed");
     logo.style.transitionDuration = mode === "instant" ? "0ms" : `${BIO_LOGO_FADE_MS}ms`;
   });
+
+  if (!wasRevealed) {
+    bioLogoRevealStartedAt = mode === "instant" ? now - getBioLogoRevealDuration() : now;
+  }
+
+  if (mode === "instant") {
+    bioLogoRevealCompleted = true;
+  }
+}
+
+function getBioLogoRevealDuration() {
+  if (!bioLogoItems.length) {
+    return 0;
+  }
+
+  const step = BIO_LOGO_FADE_MS - BIO_LOGO_OVERLAP_MS;
+  const lastLogoDelay = BIO_LOGO_SEQUENCE_START_MS + ((bioLogoItems.length - 1) * step);
+  return Math.max(BIO_ENDING_SEQUENCE_WAIT_MS, lastLogoDelay + (BIO_LOGO_FADE_MS / 3));
+}
+
+function updateBioLogoRevealState(now, viewportHeight) {
+  if (!bioLogoGroup) {
+    bioLogoRevealCompleted = true;
+    return;
+  }
+
+  const logoRect = bioLogoGroup.getBoundingClientRect();
+  const logoIsAboveViewport = logoRect.bottom <= 0;
+  const logoIsInViewport = logoRect.top < viewportHeight && logoRect.bottom > 0;
+
+  if (logoIsAboveViewport) {
+    revealBioLogos("instant");
+  } else if (logoIsInViewport && !bioLogoGroup.classList.contains("is-revealed")) {
+    revealBioLogos("normal");
+  }
+
+  if (bioLogoRevealStartedAt && !bioLogoRevealCompleted) {
+    bioLogoRevealCompleted = now >= bioLogoRevealStartedAt + getBioLogoRevealDuration();
+  }
 }
 
 function syncBioScrollLines() {
@@ -802,8 +1003,17 @@ function syncBioScrollLines() {
 
   const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
   const now = performance.now();
+  let revealStatePending = false;
 
   bioRevealGroups.forEach((group, groupIndex) => {
+    if (group.sequence >= 7) {
+      updateBioLogoRevealState(now, viewportHeight);
+
+      if (!bioLogoRevealCompleted) {
+        return;
+      }
+    }
+
     const triggerLines = group.lines.slice(0, Math.min(3, group.lines.length));
     const triggerVisible = triggerLines.every((line) => {
       const rect = line.getBoundingClientRect();
@@ -820,8 +1030,8 @@ function syncBioScrollLines() {
     const isAboveViewport = groupRect.bottom <= 0;
     const isInViewport = groupRect.top < viewportHeight && groupRect.bottom > 0;
     const isDeepInViewport = groupMidpoint <= viewportHeight * 0.6;
-    const paragraphTriggerGap = group.lines.length <= 3 ? 100 : 50;
-    const paragraphReady = groupRect.bottom <= viewportHeight - paragraphTriggerGap;
+    const paragraphReady = groupRect.top <= viewportHeight - 0;
+    const revealAreaReady = group.sequence >= 7 ? isInViewport : paragraphReady;
 
     if (group.isSkillsGroup) {
       let anyLineRevealed = false;
@@ -835,7 +1045,7 @@ function syncBioScrollLines() {
           const lineRect = line.getBoundingClientRect();
           const lineMidpoint = lineRect.top + lineRect.height * 0.5;
           const lineAboveViewport = lineRect.bottom <= 0;
-          const lineReady = lineRect.top <= viewportHeight - 80;
+          const lineReady = lineRect.top <= viewportHeight - 0;
           const lineDeepInViewport = lineMidpoint <= viewportHeight * 0.6;
 
           if (lineAboveViewport) {
@@ -858,24 +1068,38 @@ function syncBioScrollLines() {
 
       group.allLinesRevealed = group.lines.every((line) => line.dataset.revealed === "true");
     } else if (!group.loaded) {
+      const waitingForPreviousText = group.sequence >= 8 && previousGroup && !previousGroup.revealCompleted;
+
+      if (waitingForPreviousText && !isAboveViewport) {
+        return;
+      }
+
       if (isAboveViewport) {
-        revealGroup(group, now, "instant");
-      } else if (isInViewport && paragraphReady) {
-        revealGroup(group, now, "normal");
+        revealGroup(group, now, "instant", BIO_TEXT_SPEED_MULTIPLIER);
+      } else if (isInViewport && revealAreaReady) {
+        const revealMode = group.colorMode === "static" ? "normal" : isDeepInViewport ? "fast" : "normal";
+        revealGroup(group, now, revealMode, BIO_TEXT_SPEED_MULTIPLIER);
       } else if (isInViewport && isDeepInViewport) {
-        revealGroup(group, now, "fast");
+        const revealMode = group.colorMode === "static" ? "normal" : "fast";
+        revealGroup(group, now, revealMode, BIO_TEXT_SPEED_MULTIPLIER);
       }
     }
 
     if (group.revealStartedAt) {
       const maxDelay = group.lines.reduce((value, line) => Math.max(value, Number.parseFloat(line.dataset.revealDelay || "0")), 0);
-      group.revealCompleted = now >= group.revealStartedAt + 720 + maxDelay;
+      const sequenceCompletionMs = group.sequence >= 7 ? BIO_ENDING_SEQUENCE_WAIT_MS : 720;
+      group.revealCompleted = now >= group.revealStartedAt + sequenceCompletionMs + maxDelay;
+      revealStatePending = revealStatePending || !group.revealCompleted;
     }
 
     let groupProgress = 0;
 
     if (group.loaded) {
-      if (group.startAfterPreviousFullWhite && previousGroup) {
+      const waitsForPreviousWhite = previousGroup && previousGroup.colorMode === "dynamic" && group.colorMode === "dynamic";
+
+      if (waitsForPreviousWhite && !previousGroup.whiteCompleted && !isAboveViewport) {
+        groupProgress = 0;
+      } else if ((waitsForPreviousWhite || group.startAfterPreviousFullWhite) && previousGroup) {
         const previousRect = previousGroup.element.getBoundingClientRect();
         const previousMidpoint = previousRect.top + previousRect.height * 0.5;
         const startPoint = viewportHeight * previousGroup.fullWhitePointRatio + (progressAnchorMidpoint - previousMidpoint);
@@ -884,7 +1108,17 @@ function syncBioScrollLines() {
       } else {
         groupProgress = getSequentialGroupProgress(progressAnchorMidpoint, viewportHeight, group.lines.length, group.fullWhitePointRatio);
       }
+
+      if (isAboveViewport) {
+        groupProgress = group.lines.length;
+      } else if (group.isSkillsGroup && lastLineRect?.bottom <= viewportHeight * group.fullWhitePointRatio) {
+        groupProgress = group.lines.length;
+      } else if (!waitsForPreviousWhite && !group.isSkillsGroup && groupMidpoint <= viewportHeight * group.fullWhitePointRatio) {
+        groupProgress = group.lines.length;
+      }
     }
+
+    group.whiteCompleted = group.colorMode !== "dynamic" || groupProgress >= group.lines.length;
 
     group.lines.forEach((line, lineIndex) => {
       if (group.colorMode !== "dynamic") {
@@ -897,26 +1131,10 @@ function syncBioScrollLines() {
     });
   });
 
-  if (bioLogoGroup) {
-    const logoRect = bioLogoGroup.getBoundingClientRect();
-    const logoMidpoint = logoRect.top + logoRect.height * 0.5;
-    const logoIsAboveViewport = logoRect.bottom <= 0;
-    const logoIsInViewport = logoRect.top < viewportHeight && logoRect.bottom > 0;
-    const logoReady = logoRect.top <= viewportHeight - 120;
-    const logoSettled = logoMidpoint <= viewportHeight * 0.78;
-    const prerequisiteComplete = !bioLogoPrerequisiteGroup || bioLogoPrerequisiteGroup.revealCompleted;
+  updateBioLogoRevealState(now, viewportHeight);
 
-    if (logoIsAboveViewport) {
-      revealBioLogos("instant");
-    } else if (
-      prerequisiteComplete &&
-      logoIsInViewport &&
-      logoReady &&
-      logoSettled &&
-      !bioLogoGroup.classList.contains("is-revealed")
-    ) {
-      revealBioLogos("normal");
-    }
+  if ((bioLogoRevealStartedAt && !bioLogoRevealCompleted) || revealStatePending) {
+    requestBioScrollSync();
   }
 }
 
@@ -1064,7 +1282,8 @@ function createSharedRouteTransition(fromRoute, toRoute) {
 
   return {
     prepare() {
-      hiddenElements.forEach((element) => element.classList.add("is-shared-transition-hidden"));
+      // Keep the real shared elements visible until their fixed-position clones exist.
+      // Hiding here can create an empty frame after pre-scrolls, especially bio -> main.
     },
 
     play() {
@@ -1181,8 +1400,17 @@ function captureBioPhotoState() {
     return null;
   }
 
+  const photoRect = photo.getBoundingClientRect();
+  const imageRect = image.getBoundingClientRect();
+  const imageStyle = getComputedStyle(image);
+
   return {
-    rect: photo.getBoundingClientRect(),
+    rect: photoRect,
+    imageRect,
+    imageOffsetLeft: imageRect.left - photoRect.left,
+    imageOffsetTop: imageRect.top - photoRect.top,
+    imageObjectFit: imageStyle.objectFit,
+    imageObjectPosition: imageStyle.objectPosition,
     src: image.currentSrc || image.src,
     alt: image.alt || "",
     image,
@@ -1210,27 +1438,34 @@ function createBioPhotoTransition(fromRoute, toRoute) {
     }
 
     ghost.className = "transition-photo";
-    image.style.top = `${-10 * photoState.scale}px`;
-    image.style.width = `${1820 * photoState.scale}px`;
-    image.style.height = `${1370 * photoState.scale}px`;
     ghost.appendChild(image);
     ghost.style.left = `${photoState.rect.left}px`;
     ghost.style.top = `${photoState.rect.top}px`;
     ghost.style.width = `${photoState.rect.width}px`;
     ghost.style.height = `${photoState.rect.height}px`;
     ghost.style.clipPath = toRoute === ROUTE_BIO ? "inset(0 0 0 100%)" : "inset(0 0 0 0)";
+    image.style.left = `${photoState.imageOffsetLeft}px`;
+    image.style.top = `${photoState.imageOffsetTop}px`;
+    image.style.width = `${photoState.imageRect.width}px`;
+    image.style.height = `${photoState.imageRect.height}px`;
+    image.style.objectFit = photoState.imageObjectFit;
+    image.style.objectPosition = photoState.imageObjectPosition;
     document.body.appendChild(ghost);
     ghost.getBoundingClientRect();
     return ghost;
   }
 
   return {
+    needsPaintHandoff: Boolean(sourcePhotoState),
+
     prepare() {
       preparedPhoto = document.querySelector(".bio-photo");
       if (sourcePhotoState) {
         preparedGhost = buildGhost(sourcePhotoState);
       }
-      preparedPhoto?.classList.add("is-photo-transition-hidden");
+      if (!sourcePhotoState) {
+        preparedPhoto?.classList.add("is-photo-transition-hidden");
+      }
     },
 
     play() {
@@ -1243,35 +1478,122 @@ function createBioPhotoTransition(fromRoute, toRoute) {
       }
 
       const ghost = preparedGhost || buildGhost(photoState);
-      photo.classList.add("is-photo-transition-hidden");
-
-      const startTime = performance.now();
+      const hideRealPhoto = () => {
+        photo.classList.add("is-photo-transition-hidden");
+      };
 
       return new Promise((resolve) => {
-        const step = (now) => {
-          const progress = Math.min((now - startTime) / ROUTE_TRANSITION_MS, 1);
-          const eased = easeInOutCustom(progress);
+        const start = () => {
+          hideRealPhoto();
+          const startTime = performance.now();
 
-          if (toRoute === ROUTE_BIO) {
-            ghost.style.clipPath = `inset(0 0 0 ${100 * (1 - eased)}%)`;
-          } else {
-            ghost.style.clipPath = `inset(0 0 0 ${100 * eased}%)`;
-          }
+          const step = (now) => {
+            const progress = Math.min((now - startTime) / ROUTE_TRANSITION_MS, 1);
+            const eased = easeInOutCustom(progress);
 
-          if (progress < 1) {
-            window.requestAnimationFrame(step);
-            return;
-          }
+            if (toRoute === ROUTE_BIO) {
+              ghost.style.clipPath = `inset(0 0 0 ${100 * (1 - eased)}%)`;
+            } else {
+              ghost.style.clipPath = `inset(0 0 0 ${100 * eased}%)`;
+            }
 
-          window.requestAnimationFrame(() => {
-            ghost.remove();
-            photo.classList.remove("is-photo-transition-hidden");
-            resolve();
-          });
+            if (progress < 1) {
+              window.requestAnimationFrame(step);
+              return;
+            }
+
+            window.requestAnimationFrame(() => {
+              ghost.remove();
+              photo.classList.remove("is-photo-transition-hidden");
+              resolve();
+            });
+          };
+
+          window.requestAnimationFrame(step);
         };
 
-        window.requestAnimationFrame(step);
+        if (sourcePhotoState) {
+          window.requestAnimationFrame(start);
+          return;
+        }
+
+        start();
       });
+    },
+  };
+}
+
+function createMainBackgroundRouteTransition(fromRoute, toRoute) {
+  const isMainBioTransition =
+    (fromRoute === ROUTE_MAIN && toRoute === ROUTE_BIO) ||
+    (fromRoute === ROUTE_BIO && toRoute === ROUTE_MAIN);
+
+  if (!isMainBioTransition || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return null;
+  }
+
+  const root = document.documentElement;
+
+  function setRouteOpacity(value) {
+    root.style.setProperty("--main-bg-route-opacity", String(clamp(value, 0, 1)));
+  }
+
+  function getScrollOpacity() {
+    const value = Number.parseFloat(getComputedStyle(root).getPropertyValue("--main-bg-scroll-opacity"));
+    return Number.isFinite(value) ? clamp(value, 0, 1) : 1;
+  }
+
+  function animateOpacity(from, to, onUpdate, onDone) {
+    const startTime = performance.now();
+
+    return new Promise((resolve) => {
+      const step = (now) => {
+        const progress = Math.min((now - startTime) / MAIN_BACKGROUND_ROUTE_FADE_MS, 1);
+        const eased = easeInOutCustom(progress);
+        onUpdate(lerp(from, to, eased));
+
+        if (progress < 1) {
+          window.requestAnimationFrame(step);
+          return;
+        }
+
+        onUpdate(to);
+        onDone?.();
+        resolve();
+      };
+
+      window.requestAnimationFrame(step);
+    });
+  }
+
+  return {
+    prepare() {
+      if (fromRoute === ROUTE_MAIN && toRoute === ROUTE_BIO) {
+        setRouteOpacity(getScrollOpacity());
+        root.classList.add("is-main-bg-front");
+      }
+
+      if (fromRoute === ROUTE_BIO && toRoute === ROUTE_MAIN) {
+        setRouteOpacity(0);
+      }
+    },
+
+    play() {
+      if (fromRoute === ROUTE_MAIN && toRoute === ROUTE_BIO) {
+        return animateOpacity(getScrollOpacity(), 0, setRouteOpacity, () => {
+          setRouteOpacity(0);
+          root.classList.remove("is-main-bg-front");
+        });
+      }
+
+      if (fromRoute === ROUTE_BIO && toRoute === ROUTE_MAIN) {
+        return animateOpacity(0, 1, setRouteOpacity, () => {
+          setRouteOpacity(1);
+          root.classList.remove("is-main-bg-front");
+        });
+      }
+
+      return Promise.resolve();
     },
   };
 }
@@ -1300,7 +1622,7 @@ function playInitialBioEntryTransition(intent) {
   });
 }
 
-function animateRouteTransition(fromRoute, toRoute, sharedTransition = null, photoTransition = null, onComplete = null) {
+function animateRouteTransition(fromRoute, toRoute, sharedTransition = null, photoTransition = null, backgroundTransition = null, onComplete = null) {
   const fromPanel = getRoutePanel(fromRoute);
   const toPanel = getRoutePanel(toRoute);
 
@@ -1322,11 +1644,12 @@ function animateRouteTransition(fromRoute, toRoute, sharedTransition = null, pho
   resetRoutePanelStyles(toPanel);
   document.documentElement.classList.add("is-route-transitioning");
 
-  const transitionTasks = [sharedTransition?.play(), photoTransition?.play()]
+  const transitionTasks = [sharedTransition?.play(), photoTransition?.play(), backgroundTransition?.play()]
     .filter((task) => task && typeof task.then === "function");
 
   if (!transitionTasks.length) {
     document.documentElement.classList.remove("is-route-transitioning");
+    syncRouteBackgroundOpacity(toRoute);
     routeTransitioning = false;
     onComplete?.();
     return;
@@ -1334,6 +1657,7 @@ function animateRouteTransition(fromRoute, toRoute, sharedTransition = null, pho
 
   Promise.all(transitionTasks).finally(() => {
     document.documentElement.classList.remove("is-route-transitioning");
+    syncRouteBackgroundOpacity(toRoute);
     routeTransitioning = false;
     onComplete?.();
   });
@@ -1343,17 +1667,29 @@ function performRouteTransition(route, options = {}) {
   const previousRoute = currentRoute;
   const sharedTransition = createSharedRouteTransition(previousRoute, route);
   const photoTransition = createBioPhotoTransition(previousRoute, route);
+  const backgroundTransition = createMainBackgroundRouteTransition(previousRoute, route);
 
   window.requestAnimationFrame(() => {
     window.requestAnimationFrame(() => {
       sharedTransition?.prepare();
       photoTransition?.prepare();
-      applyRoute(route);
-      animateRouteTransition(previousRoute, route, sharedTransition, photoTransition, () => {
-        if (options.revealWorks && route === ROUTE_MAIN) {
-          animateMainLoopToWorks();
-        }
-      });
+      backgroundTransition?.prepare();
+      const startTransition = () => {
+        document.documentElement.classList.add("is-route-transitioning");
+        applyRoute(route);
+        animateRouteTransition(previousRoute, route, sharedTransition, photoTransition, backgroundTransition, () => {
+          if (options.revealWorks && route === ROUTE_MAIN) {
+            animateMainLoopToWorks();
+          }
+        });
+      };
+
+      if (photoTransition?.needsPaintHandoff) {
+        window.requestAnimationFrame(startTransition);
+        return;
+      }
+
+      startTransition();
     });
   });
 }
@@ -1450,6 +1786,23 @@ function initSpaRouting() {
       return;
     }
 
+    if (currentRoute === ROUTE_BIO && nextRoute === ROUTE_MAIN && anchor.classList.contains("bio-back-home")) {
+      if (routeTransitioning) {
+        return;
+      }
+
+      routeTransitioning = true;
+      smoothScrollToTop(BIO_TO_MAIN_SCROLL_TOP_MS)
+        .then(() => {
+          routeTransitioning = false;
+          navigateToRoute(nextRoute);
+        })
+        .catch(() => {
+          routeTransitioning = false;
+        });
+      return;
+    }
+
     if (nextRoute === ROUTE_MAIN && url.hash === "#works") {
       navigateToRoute(nextRoute, { revealWorks: true });
       return;
@@ -1511,9 +1864,11 @@ syncPageScale();
 layoutWorksGrid();
 buildLoopedWorks();
 syncLoopOffset(loopOffset);
+initMainBackgroundVideoFallback();
 initWorksPositionMemory();
 initTiltCards();
 window.addEventListener("wheel", handleWheel, { passive: false });
+initWorksTouchScroll();
 initBioScrollControls();
 initBioScrollText();
 initSpaRouting();
@@ -1531,6 +1886,8 @@ if (shouldRevealWorksOnLoad) {
 playInitialBioEntryTransition(initialBioEntryIntent);
 window.addEventListener("resize", () => {
   syncPageScale();
+  layoutWorksGrid();
+  loopOffset = syncLoopOffset(loopOffset);
   requestBioScrollSync();
 });
 document.documentElement.classList.add("is-ready");

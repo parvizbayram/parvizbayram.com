@@ -4,7 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Aerosure - Parviz Portfolio</title>
-    <link rel="stylesheet" href="/styles.css?v=flow-scroll-4">
+    <script src="/scale-init.js?v=scale-init-1"></script>
+    <link rel="preload" href="/fonts/Aeonik%20Font%20Family/Variable/AeonikPro-Regular.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="/fonts/Aeonik%20Font%20Family/Variable/AeonikPro-RegularItalic.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="/fonts/Editorial%20Font%20Family/EditorialNew-UltralightItalic.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/aerosure/aerosure-1.webp" as="image" type="image/webp" fetchpriority="high">
+    <link rel="stylesheet" href="/styles.css?v=aerosure-next-project-2">
   </head>
   <body class="aerosure-body">
     <header class="site-header bio-header aerosure-header" data-name="header">
@@ -33,7 +38,7 @@
         <section class="case-flow aerosure-content" aria-label="Aerosure case study">
           <div class="case-stack continuous-case-strip">
           <div class="work-media case-media aerosure-media case-media-start" style="--media-h: 1365px;">
-            <img class="work-img" src="/assets/aerosure/aerosure-1.webp" alt="Aerosure website visual 1">
+            <img class="work-img" src="/assets/aerosure/aerosure-1.webp" alt="Aerosure website visual 1" loading="eager" decoding="sync" fetchpriority="high">
           </div>
 
           <div class="work-media work-video work-video-primary case-media aerosure-media case-media-end case-video case-video-crop-top aerosure-video-embed" style="--media-h: 1024px;">
@@ -41,7 +46,7 @@
           </div>
           </div>
 
-          <p class="work-copy work-copy-light case-copy aerosure-case-copy" style="--copy-w: 600px; text-align: left;">
+          <p class="work-copy work-copy-light case-copy aerosure-case-copy aerosure-primary-copy" style="--copy-w: 600px; text-align: left;">
             While undertaking this project, my primary objective was to establish Aerosure as a globally recognizable brand by designing a promotional website that embodies distinctive aesthetics and unique elements. Additionally, the client requested the consolidation of all company services onto a single, easily navigable page, thereby enhancing their clarity and accessibility. To accomplish this, I incorporated 3D models for each section, imparting a distinctive character to each.
             <br><br>
             Moreover, in order to maintain transparency in the presentation of services, I employed a judicious combination of white space and subtle light gradients.
@@ -61,13 +66,30 @@
           </div>
           </div>
 
-          <button class="work-scroll-top" type="button" data-aerosure-scroll-top>SCROLL TO TOP</button>
+          <section class="next-project-panel" data-next-project hidden aria-label="Next project">
+            <a class="next-project-link" data-next-project-link href="#">
+              <span class="next-project-eyebrow" data-next-project-eyebrow>WHAT'S NEXT?</span>
+              <div class="next-project-preview-host" data-next-project-preview-host></div>
+            </a>
+            <span class="next-project-cursor" data-next-project-cursor aria-hidden="true">
+              <span>Next</span>
+              <span>Project</span>
+            </span>
+          </section>
         </section>
       </main>
     </div>
 
+    <template
+      data-next-project-preview
+      data-intro-selector=".case-intro"
+      data-media-selector=".case-flow .case-media"
+      data-preview-class="aerosure-next-project-preview"
+    ></template>
+
     <script src="https://player.vimeo.com/api/player.js"></script>
     <script src="/standalone-nav.js?v=works-position-memory-1"></script>
+    <script src="/next-project.js?v=next-project-pilot-5"></script>
     <script src="/aerosure.js?v=aerosure-static-1"></script>
   </body>
 </html>

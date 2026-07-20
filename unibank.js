@@ -18,8 +18,11 @@
   let radioRafId = 0;
 
   function syncUnibankScale() {
-    const scale = window.innerWidth < DESIGN_WIDTH ? window.innerWidth / DESIGN_WIDTH : 1;
-    root.style.setProperty("--page-scale", scale.toFixed(5));
+    const scale = typeof window.PortfolioScale?.sync === "function"
+      ? window.PortfolioScale.sync()
+      : window.innerWidth < DESIGN_WIDTH
+        ? window.innerWidth / DESIGN_WIDTH
+        : window.innerWidth / DESIGN_WIDTH;
   }
 
   function scrollToTopInstant() {
@@ -149,10 +152,11 @@
       const baseTop = Number(player.element.dataset.radioTop || 0);
       const top = Math.max(baseTop, minimumTop);
       const hasTranscript = player.element.classList.contains("is-expanded") && player.transcript.textContent.trim();
+      const hasError = player.element.classList.contains("has-error");
       const height = hasTranscript ? RADIO_EXPANDED_HEIGHT : RADIO_COLLAPSED_HEIGHT;
 
       player.element.style.top = `${top}px`;
-      minimumTop = top + height + RADIO_ROW_GAP;
+      minimumTop = top + (hasError ? RADIO_EXPANDED_HEIGHT : height) + RADIO_ROW_GAP;
     });
   }
 
@@ -194,7 +198,7 @@
       return;
     }
 
-    player.element.classList.remove("is-expanded");
+    player.element.classList.remove("is-expanded", "has-error", "is-loading");
 
     if (expandedRadioPlayer === player) {
       expandedRadioPlayer = null;
@@ -214,13 +218,57 @@
     updateRadioTranscript(player);
   }
 
+  function setRadioLoading(player, isLoading) {
+    if (!player || player.element.classList.contains("has-error")) {
+      return;
+    }
+
+    player.element.classList.toggle("is-loading", Boolean(isLoading));
+  }
+
+  function clearRadioError(player) {
+    if (!player) {
+      return;
+    }
+
+    player.element.classList.remove("has-error");
+    player.button.setAttribute("aria-label", player.audio.paused || player.audio.ended
+      ? `Play radio spot ${player.id}`
+      : `Pause radio spot ${player.id}`);
+  }
+
+  function setRadioError(player, message = "Audio unavailable. Click to retry") {
+    if (!player) {
+      return;
+    }
+
+    player.audio.pause();
+    player.element.classList.remove("is-loading", "is-playing");
+    player.element.classList.add("has-error", "is-expanded");
+    player.button.setAttribute("aria-label", `Radio spot ${player.id} is unavailable`);
+
+    if (player.errorMessage) {
+      player.errorMessage.textContent = message;
+    }
+
+    if (activeRadioPlayer === player) {
+      activeRadioPlayer = null;
+    }
+
+    expandedRadioPlayer = player;
+    drawWaveform(player);
+    updateRadioTranscript(player);
+    layoutRadioPlayers();
+    stopRadioAnimationIfIdle();
+  }
+
   function pauseRadioPlayer(player, { collapse = false } = {}) {
     if (!player) {
       return;
     }
 
     player.audio.pause();
-    player.element.classList.remove("is-playing");
+    player.element.classList.remove("is-playing", "is-loading");
     player.button.setAttribute("aria-label", `Play radio spot ${player.id}`);
     drawWaveform(player);
     updateRadioTranscript(player);
@@ -233,6 +281,8 @@
   }
 
   function playRadioPlayer(player) {
+    clearRadioError(player);
+
     if (activeRadioPlayer && activeRadioPlayer !== player) {
       pauseRadioPlayer(activeRadioPlayer, { collapse: true });
     }
@@ -243,16 +293,20 @@
 
     activeRadioPlayer = player;
     expandRadioPlayer(player);
+    setRadioLoading(player, true);
 
     player.audio.play()
       .then(() => {
+        setRadioLoading(player, false);
         player.element.classList.add("is-playing");
         player.button.setAttribute("aria-label", `Pause radio spot ${player.id}`);
         startRadioAnimation();
       })
       .catch(() => {
+        setRadioLoading(player, false);
         player.element.classList.remove("is-playing");
         player.button.setAttribute("aria-label", `Play radio spot ${player.id}`);
+        setRadioError(player, "Audio could not start. Click to retry");
       });
   }
 
@@ -269,6 +323,7 @@
 
     if (duration) {
       const seekTime = ratio * duration;
+      setRadioLoading(player, true);
 
       if (player.audio.readyState === 0) {
         player.pendingSeekTime = seekTime;
@@ -286,6 +341,11 @@
     let isDragging = false;
 
     player.button.addEventListener("click", () => {
+      if (player.element.classList.contains("has-error")) {
+        clearRadioError(player);
+        player.audio.load();
+      }
+
       if (player.audio.paused || player.audio.ended) {
         playRadioPlayer(player);
         return;
@@ -338,8 +398,38 @@
         player.pendingSeekTime = null;
       }
 
+      setRadioLoading(player, false);
       drawWaveform(player);
       updateRadioTranscript(player);
+    });
+    player.audio.addEventListener("seeking", () => {
+      if (player.element.classList.contains("is-expanded")) {
+        setRadioLoading(player, true);
+      }
+    });
+    player.audio.addEventListener("seeked", () => {
+      setRadioLoading(player, false);
+      drawWaveform(player);
+      updateRadioTranscript(player);
+    });
+    player.audio.addEventListener("waiting", () => {
+      if (player === activeRadioPlayer || player.element.classList.contains("is-expanded")) {
+        setRadioLoading(player, true);
+      }
+    });
+    player.audio.addEventListener("stalled", () => {
+      if (player === activeRadioPlayer || player.element.classList.contains("is-expanded")) {
+        setRadioLoading(player, true);
+      }
+    });
+    player.audio.addEventListener("canplay", () => {
+      setRadioLoading(player, false);
+    });
+    player.audio.addEventListener("playing", () => {
+      setRadioLoading(player, false);
+      player.element.classList.add("is-playing");
+      player.button.setAttribute("aria-label", `Pause radio spot ${player.id}`);
+      startRadioAnimation();
     });
     player.audio.addEventListener("timeupdate", () => {
       if (!player.audio.paused) {
@@ -351,7 +441,7 @@
     });
     player.audio.addEventListener("ended", () => {
       player.audio.currentTime = 0;
-      player.element.classList.remove("is-playing");
+      player.element.classList.remove("is-playing", "is-loading");
       player.button.setAttribute("aria-label", `Play radio spot ${player.id}`);
       drawWaveform(player);
       updateRadioTranscript(player);
@@ -362,6 +452,9 @@
       }
 
       stopRadioAnimationIfIdle();
+    });
+    player.audio.addEventListener("error", () => {
+      setRadioError(player, "Audio unavailable. Click to retry");
     });
   }
 
@@ -376,6 +469,7 @@
         audio: element.querySelector("audio"),
         transcript: element.querySelector(".radio-transcript"),
         transcriptTrack: element.querySelector(".radio-transcript-track"),
+        errorMessage: element.querySelector(".radio-error-message"),
         pendingSeekTime: null,
       };
 

@@ -18,8 +18,11 @@
   }
 
   function syncAerosureScale() {
-    const scale = window.innerWidth < DESIGN_WIDTH ? window.innerWidth / DESIGN_WIDTH : 1;
-    root.style.setProperty("--page-scale", scale.toFixed(5));
+    const scale = typeof window.PortfolioScale?.sync === "function"
+      ? window.PortfolioScale.sync()
+      : window.innerWidth < DESIGN_WIDTH
+        ? window.innerWidth / DESIGN_WIDTH
+        : window.innerWidth / DESIGN_WIDTH;
     requestAnimationFrame(() => syncFlowHeight(scale));
   }
 
@@ -156,6 +159,15 @@
     const videoBlocks = document.querySelectorAll(".aerosure-media.work-video");
     videoBlocks.forEach((block) => {
       if (block.querySelector(".aerosure-media-shield")) {
+        return;
+      }
+
+      if (block.classList.contains("work-video-primary")) {
+        block.classList.add("is-native-vimeo-interactive");
+        const iframe = block.querySelector("iframe");
+        if (iframe) {
+          iframe.style.pointerEvents = "auto";
+        }
         return;
       }
 

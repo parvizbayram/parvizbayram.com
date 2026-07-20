@@ -4,6 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Pedalchi - Parviz Portfolio</title>
+    <script src="/scale-init.js?v=scale-init-1"></script>
+    <link rel="preload" href="/fonts/Aeonik%20Font%20Family/Variable/AeonikPro-Regular.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="/fonts/Aeonik%20Font%20Family/Variable/AeonikPro-RegularItalic.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="/fonts/Editorial%20Font%20Family/EditorialNew-UltralightItalic.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/pedalchi/pedalchi-1.webp" as="image" type="image/webp" fetchpriority="high">
     <link rel="stylesheet" href="/styles.css?v=pedalchi-static-1">
   </head>
   <body class="pedalchi-body">
@@ -33,7 +38,7 @@
         <section class="case-flow pedalchi-content" aria-label="Pedalchi case study">
           <div class="case-stack continuous-case-strip">
             <div class="work-media case-media pedalchi-media case-media-start" style="--media-h: 1300px;">
-              <img class="work-img" src="/assets/pedalchi/pedalchi-1.webp" alt="Pedalchi brand identity visual 1" decoding="async" fetchpriority="high">
+              <img class="work-img" src="/assets/pedalchi/pedalchi-1.webp" alt="Pedalchi brand identity visual 1" loading="eager" decoding="sync" fetchpriority="high">
             </div>
 
             <div class="work-media work-video work-video-primary case-media pedalchi-media case-media-flat case-video pedalchi-video-embed" style="--media-h: 1024px;">
@@ -95,13 +100,30 @@
             </div>
           </div>
 
-          <button class="work-scroll-top" type="button" data-pedalchi-scroll-top>SCROLL TO TOP</button>
+          <section class="next-project-panel" data-next-project hidden aria-label="Next project">
+            <a class="next-project-link" data-next-project-link href="#">
+              <span class="next-project-eyebrow" data-next-project-eyebrow>WHAT'S NEXT?</span>
+              <div class="next-project-preview-host" data-next-project-preview-host></div>
+            </a>
+            <span class="next-project-cursor" data-next-project-cursor aria-hidden="true">
+              <span>Next</span>
+              <span>Project</span>
+            </span>
+          </section>
         </section>
       </main>
     </div>
 
+    <template
+      data-next-project-preview
+      data-intro-selector=".case-intro"
+      data-media-selector=".case-flow .case-media"
+      data-preview-class="pedalchi-next-project-preview"
+    ></template>
+
     <script src="https://player.vimeo.com/api/player.js"></script>
     <script src="/standalone-nav.js?v=works-position-memory-1"></script>
+    <script src="/next-project.js?v=next-project-pilot-5"></script>
     <script src="/pedalchi.js?v=pedalchi-static-1"></script>
   </body>
 </html>

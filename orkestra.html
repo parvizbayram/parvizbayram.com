@@ -4,7 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Orkestra - Parviz Portfolio</title>
-    <link rel="stylesheet" href="/styles.css?v=flow-scroll-4">
+    <script src="/scale-init.js?v=scale-init-1"></script>
+    <link rel="preload" href="/fonts/Aeonik%20Font%20Family/Variable/AeonikPro-Regular.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="/fonts/Aeonik%20Font%20Family/Variable/AeonikPro-RegularItalic.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="/fonts/Editorial%20Font%20Family/EditorialNew-UltralightItalic.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/orkestra/orkestra-1.webp" as="image" type="image/webp" fetchpriority="high">
+    <link rel="stylesheet" href="/styles.css?v=orkestra-next-project-2">
   </head>
   <body class="orkestra-body">
     <header class="site-header bio-header orkestra-header" data-name="header">
@@ -33,7 +38,7 @@
         <section class="case-flow orkestra-content" aria-label="Orkestra case study">
           <div class="case-stack continuous-case-strip">
           <div class="work-media case-media orkestra-media case-media-start" style="--media-h: 1105px;">
-            <img class="work-img" src="/assets/orkestra/orkestra-1.webp" alt="Orkestra branding visual 1" decoding="async" fetchpriority="high">
+            <img class="work-img" src="/assets/orkestra/orkestra-1.webp" alt="Orkestra branding visual 1" loading="eager" decoding="sync" fetchpriority="high">
           </div>
 
           <div class="work-media work-video case-media orkestra-media case-media-end case-video orkestra-video-embed" style="--media-h: 1024px;">
@@ -41,7 +46,7 @@
           </div>
           </div>
 
-          <p class="work-copy work-copy-light case-copy orkestra-case-copy" style="--copy-w: 580px;">
+          <p class="work-copy work-copy-light case-copy orkestra-case-copy orkestra-primary-copy" style="--copy-w: 580px;">
             Orkestra is a brand new London-based recruitment company. They primarily work within the tech industry and combine lots of individuals with areas of expertise to help companies build tech teams.
             <br><br>
             Their new logo is a perfectly rounded circle that consists of two parts. The lower part is solid, indicating
@@ -93,12 +98,29 @@
             <img class="work-img" src="/assets/orkestra/orkestra-9.webp" alt="Orkestra branding visual 9" loading="lazy" decoding="async">
           </div>
 
-          <button class="work-scroll-top" type="button" data-orkestra-scroll-top>SCROLL TO TOP</button>
+          <section class="next-project-panel" data-next-project hidden aria-label="Next project">
+            <a class="next-project-link" data-next-project-link href="#">
+              <span class="next-project-eyebrow" data-next-project-eyebrow>WHAT'S NEXT?</span>
+              <div class="next-project-preview-host" data-next-project-preview-host></div>
+            </a>
+            <span class="next-project-cursor" data-next-project-cursor aria-hidden="true">
+              <span>Next</span>
+              <span>Project</span>
+            </span>
+          </section>
         </section>
       </main>
     </div>
 
+    <template
+      data-next-project-preview
+      data-intro-selector=".case-intro"
+      data-media-selector=".case-flow .case-media"
+      data-preview-class="orkestra-next-project-preview"
+    ></template>
+
     <script src="/standalone-nav.js?v=works-position-memory-1"></script>
-    <script src="/orkestra.js?v=orkestra-static-1"></script>
+    <script src="/next-project.js?v=next-project-pilot-5"></script>
+    <script src="/orkestra.js?v=next-project-pilot-1"></script>
   </body>
 </html>

@@ -18,8 +18,11 @@
   }
 
   function syncStraudoScale() {
-    const scale = window.innerWidth < DESIGN_WIDTH ? window.innerWidth / DESIGN_WIDTH : 1;
-    root.style.setProperty("--page-scale", scale.toFixed(5));
+    const scale = typeof window.PortfolioScale?.sync === "function"
+      ? window.PortfolioScale.sync()
+      : window.innerWidth < DESIGN_WIDTH
+        ? window.innerWidth / DESIGN_WIDTH
+        : window.innerWidth / DESIGN_WIDTH;
     requestAnimationFrame(() => syncFlowHeight(scale));
   }
 
