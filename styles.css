@@ -435,6 +435,10 @@ html[data-route="bio"] .route-bio-header {
   opacity: 0;
 }
 
+.intro-mark-message[hidden] {
+  display: none !important;
+}
+
 .intro-mark-word {
   display: inline-block;
   overflow: hidden;

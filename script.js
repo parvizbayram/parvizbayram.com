@@ -766,12 +766,50 @@ function setReturningSessionValue(key, value) {
 
 function getReturningIntroElements() {
   const root = document.querySelector("[data-returning-intro]");
+  ensureReturningIntroStructure(root);
   return {
     root,
     sizer: root?.querySelector("[data-returning-intro-sizer]") || null,
     defaultLayer: root?.querySelector("[data-returning-intro-default]") || null,
     messageLayer: root?.querySelector("[data-returning-intro-message]") || null
   };
+}
+
+function ensureReturningIntroStructure(root) {
+  if (!root) {
+    return;
+  }
+
+  const hasStructure = root.querySelector("[data-returning-intro-sizer]")
+    && root.querySelector("[data-returning-intro-default]")
+    && root.querySelector("[data-returning-intro-message]");
+
+  if (hasStructure) {
+    return;
+  }
+
+  const sourceText = (root.textContent || RETURNING_INTRO_BASE_TEXT).replace(/\s+/g, " ").trim()
+    || RETURNING_INTRO_BASE_TEXT;
+  const sizer = document.createElement("span");
+  const defaultLayer = document.createElement("span");
+  const messageLayer = document.createElement("span");
+
+  root.textContent = "";
+
+  sizer.className = "intro-mark-sizer";
+  sizer.setAttribute("data-returning-intro-sizer", "");
+  sizer.textContent = sourceText;
+
+  defaultLayer.className = "intro-mark-layer intro-mark-default";
+  defaultLayer.setAttribute("data-returning-intro-default", "");
+  defaultLayer.textContent = RETURNING_INTRO_BASE_TEXT;
+
+  messageLayer.className = "intro-mark-layer intro-mark-message";
+  messageLayer.setAttribute("data-returning-intro-message", "");
+  messageLayer.setAttribute("aria-hidden", "true");
+  messageLayer.hidden = true;
+
+  root.append(sizer, defaultLayer, messageLayer);
 }
 
 function setReturningIntroSizer(text) {
@@ -786,9 +824,19 @@ function renderReturningIntroWords(layer, text) {
     return [];
   }
 
-  const words = String(text || RETURNING_INTRO_BASE_TEXT).trim().split(/\s+/).filter(Boolean);
+  const normalizedText = text == null
+    ? RETURNING_INTRO_BASE_TEXT
+    : String(text).replace(/\s+/g, " ").trim();
+
   layer.replaceChildren();
-  layer.setAttribute("aria-label", text || RETURNING_INTRO_BASE_TEXT);
+
+  if (!normalizedText) {
+    layer.removeAttribute("aria-label");
+    return [];
+  }
+
+  const words = normalizedText.split(/\s+/).filter(Boolean);
+  layer.setAttribute("aria-label", normalizedText);
 
   words.forEach((word, index) => {
     const wordMask = document.createElement("span");
@@ -842,10 +890,12 @@ function setReturningIntroImmediate(text = RETURNING_INTRO_BASE_TEXT) {
     messageLayer.style.opacity = "0";
     messageLayer.style.transform = "translateY(12px)";
     messageLayer.setAttribute("aria-hidden", "true");
+    messageLayer.hidden = true;
     return;
   }
 
   renderReturningIntroWords(messageLayer, text);
+  messageLayer.hidden = false;
   messageLayer.removeAttribute("aria-hidden");
   defaultLayer.style.opacity = "0";
   defaultLayer.style.transform = "translateY(-12px)";
@@ -874,9 +924,11 @@ function animateReturningIntroTo(text, duration = RETURNING_INTRO_SWAP_MS) {
 
   if (text !== RETURNING_INTRO_BASE_TEXT) {
     renderReturningIntroWords(messageLayer, text);
+    messageLayer.hidden = false;
     messageLayer.removeAttribute("aria-hidden");
   } else {
     renderReturningIntroWords(defaultLayer, RETURNING_INTRO_BASE_TEXT);
+    messageLayer.hidden = false;
   }
 
   setReturningIntroSizer(text);
@@ -935,6 +987,7 @@ function animateReturningIntroTo(text, duration = RETURNING_INTRO_SWAP_MS) {
     if (text === RETURNING_INTRO_BASE_TEXT) {
       renderReturningIntroWords(messageLayer, "");
       messageLayer.setAttribute("aria-hidden", "true");
+      messageLayer.hidden = true;
       setReturningIntroSizer(RETURNING_INTRO_BASE_TEXT);
     }
   });
