@@ -1644,6 +1644,18 @@ html[data-route="bio"] .bio-photo {
   height: auto;
 }
 
+html.is-safari .unibank-stage,
+html.is-safari .case-stage {
+  overflow: hidden;
+}
+
+html.is-safari .unibank-shell,
+html.is-safari .case-shell {
+  zoom: 1;
+  transform: scale(var(--page-scale));
+  transform-origin: top left;
+}
+
 .case-flow.bmmb-content {
   top: auto;
 }
@@ -2412,6 +2424,34 @@ html[data-route="bio"] .bio-photo {
 
 .work-video iframe {
   display: block;
+}
+
+.work-video:not(.talktocanada-primary-video):not(.case-video-crop-top):not(.case-video-crop-y) iframe[src*="player.vimeo.com"] {
+  top: -2px !important;
+  left: -2px !important;
+  width: calc(100% + 4px) !important;
+  height: calc(100% + 4px) !important;
+  max-width: none;
+  max-height: none;
+}
+
+.work-media.case-video-crop-top iframe[src*="player.vimeo.com"],
+.work-media.case-video-crop-y iframe[src*="player.vimeo.com"] {
+  top: -2px !important;
+  left: -2px !important;
+  width: calc(100% + 4px) !important;
+  height: calc(100% + 4px) !important;
+  max-width: none;
+  max-height: none;
+}
+
+.work-media.talktocanada-primary-video iframe[src*="player.vimeo.com"] {
+  top: 142.5px !important;
+  left: 236px !important;
+  width: 1348px !important;
+  height: 760px !important;
+  max-width: none;
+  max-height: none;
 }
 
 .social-video-click-layer {

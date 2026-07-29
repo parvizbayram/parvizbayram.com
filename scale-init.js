@@ -4,6 +4,7 @@
   const TABLET_MAX_WIDTH = 1279;
   const TABLET_PORTRAIT_MAX_WIDTH = 1024;
   const root = document.documentElement;
+  const isSafari = /^((?!chrome|chromium|android|crios|fxios|edg).)*safari/i.test(navigator.userAgent);
 
   function getResponsiveScale() {
     const viewportWidth = window.innerWidth || DESIGN_WIDTH;
@@ -11,6 +12,46 @@
     return viewportWidth < DESIGN_WIDTH
       ? fitScale
       : Math.min(fitScale, MAX_DESKTOP_SCALE);
+  }
+
+  function getScaledShellHeight(stage, scale) {
+    const shell = Array.from(stage.children).find((child) => (
+      child.classList.contains("unibank-shell") ||
+      child.classList.contains("case-shell")
+    ));
+
+    if (!shell) {
+      return 0;
+    }
+
+    const shellHeight = Math.max(
+      shell.scrollHeight,
+      shell.offsetHeight,
+      parseFloat(window.getComputedStyle(shell).height) || 0
+    );
+
+    return Math.ceil(shellHeight * scale);
+  }
+
+  function syncSafariStageHeights(scale = getResponsiveScale()) {
+    if (!isSafari) {
+      return;
+    }
+
+    document.querySelectorAll(".unibank-stage, .case-stage").forEach((stage) => {
+      const scaledHeight = getScaledShellHeight(stage, scale);
+      if (scaledHeight > 0) {
+        stage.style.height = `${scaledHeight}px`;
+      }
+    });
+  }
+
+  function scheduleSafariStageSync(scale = getResponsiveScale()) {
+    if (!isSafari) {
+      return;
+    }
+
+    window.requestAnimationFrame(() => syncSafariStageHeights(scale));
   }
 
   function syncResponsiveScale() {
@@ -34,6 +75,7 @@
     root.classList.toggle("is-tablet", isTablet);
     root.classList.toggle("is-tablet-portrait", isTabletPortrait);
     root.classList.toggle("is-tablet-landscape", isTablet && !isTabletPortrait);
+    root.classList.toggle("is-safari", isSafari);
 
     root.style.setProperty("--page-scale", scale.toFixed(5));
     root.style.setProperty("--page-offset-x", `${pageOffsetX.toFixed(2)}px`);
@@ -45,6 +87,8 @@
     root.style.setProperty("--bio-viewport-half", `${viewportHeight / (2 * scale)}px`);
     root.style.setProperty("--bio-footer-gap", "80px");
 
+    scheduleSafariStageSync(scale);
+
     return scale;
   }
 
@@ -54,9 +98,25 @@
     TABLET_MAX_WIDTH,
     TABLET_PORTRAIT_MAX_WIDTH,
     getScale: getResponsiveScale,
-    sync: syncResponsiveScale
+    sync: syncResponsiveScale,
+    syncSafariStageHeights
   };
 
   syncResponsiveScale();
   window.addEventListener("resize", syncResponsiveScale, { passive: true });
+
+  if (isSafari) {
+    document.addEventListener("DOMContentLoaded", () => {
+      scheduleSafariStageSync();
+
+      if ("ResizeObserver" in window) {
+        const observer = new ResizeObserver(() => scheduleSafariStageSync());
+        document.querySelectorAll(".unibank-shell, .case-shell").forEach((shell) => {
+          observer.observe(shell);
+        });
+      }
+    });
+
+    window.addEventListener("load", () => scheduleSafariStageSync(), { passive: true });
+  }
 })();
