@@ -17,12 +17,15 @@ const mimeTypes = {
   ".webp": "image/webp",
   ".ttf": "font/ttf",
   ".woff2": "font/woff2",
+  ".txt": "text/plain; charset=utf-8",
+  ".xml": "application/xml; charset=utf-8",
   ".json": "application/json; charset=utf-8",
   ".mp3": "audio/mpeg",
-  ".mp4": "video/mp4"
+  ".mp4": "video/mp4",
+  ".webm": "video/webm"
 };
 
-function sendFile(request, response, filePath, stats) {
+function sendFile(request, response, filePath, stats, statusCode = 200) {
   const extension = path.extname(filePath);
   const contentType = mimeTypes[extension] || "application/octet-stream";
   const cacheableExtensions = new Set([
@@ -35,13 +38,17 @@ function sendFile(request, response, filePath, stats) {
     ".ttf",
     ".woff2",
     ".mp3",
-    ".mp4"
+    ".mp4",
+    ".webm"
   ]);
+  const shortCacheExtensions = new Set([".html", ".txt", ".xml"]);
   const etag = `"${stats.size}-${Math.floor(stats.mtimeMs)}"`;
   const headers = {
     "Content-Type": contentType,
     "Cache-Control": cacheableExtensions.has(extension)
-      ? "public, max-age=3600, must-revalidate"
+      ? "public, max-age=2592000"
+      : shortCacheExtensions.has(extension)
+        ? "public, max-age=300, must-revalidate"
       : "no-cache",
     "ETag": etag,
     "Accept-Ranges": "bytes"
@@ -97,7 +104,7 @@ function sendFile(request, response, filePath, stats) {
     return;
   }
 
-  response.writeHead(200, {
+  response.writeHead(statusCode, {
     ...headers,
     "Content-Length": stats.size
   });
@@ -108,6 +115,20 @@ function sendFile(request, response, filePath, stats) {
   }
 
   fs.createReadStream(filePath).pipe(response);
+}
+
+function sendNotFound(request, response) {
+  const notFoundPath = path.join(root, "404.html");
+
+  fs.stat(notFoundPath, (notFoundError, notFoundStats) => {
+    if (notFoundError || !notFoundStats.isFile()) {
+      response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+      response.end("Not found");
+      return;
+    }
+
+    sendFile(request, response, notFoundPath, notFoundStats, 404);
+  });
 }
 
 const server = http.createServer((request, response) => {
@@ -144,26 +165,34 @@ const server = http.createServer((request, response) => {
   }
 
   fs.stat(filePath, (statError, stats) => {
-    const isFile = !statError && stats.isFile();
-    const fallbackPath = path.join(root, "index.html");
-    const hasExtension = Boolean(path.extname(routePath));
-    const finalPath = isFile ? filePath : !hasExtension ? fallbackPath : null;
-
-    if (!finalPath) {
-      response.writeHead(404);
-      response.end("Not found");
+    if (!statError && stats.isFile()) {
+      sendFile(request, response, filePath, stats);
       return;
     }
 
-    fs.stat(finalPath, (finalStatError, finalStats) => {
-      if (finalStatError || !finalStats.isFile()) {
-        response.writeHead(finalStatError?.code === "ENOENT" ? 404 : 500);
-        response.end(finalStatError?.code === "ENOENT" ? "Not found" : "Server error");
+    const hasExtension = Boolean(path.extname(routePath));
+
+    if (!hasExtension) {
+      const htmlPath = path.join(root, `${routePath}.html`);
+
+      if (!htmlPath.startsWith(root)) {
+        response.writeHead(403);
+        response.end("Forbidden");
         return;
       }
 
-      sendFile(request, response, finalPath, finalStats);
-    });
+      fs.stat(htmlPath, (htmlStatError, htmlStats) => {
+        if (!htmlStatError && htmlStats.isFile()) {
+          sendFile(request, response, htmlPath, htmlStats);
+          return;
+        }
+
+        sendNotFound(request, response);
+      });
+      return;
+    }
+
+    sendNotFound(request, response);
   });
 });
 

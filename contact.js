@@ -85,15 +85,21 @@
     };
 
     button.addEventListener("click", async () => {
+      let copied = false;
       try {
         await copyText();
+        copied = true;
       } catch (error) {
         try {
           fallbackCopy(email);
+          copied = true;
         } catch (fallbackError) {
           // Keep the visual feedback responsive even if the browser blocks clipboard access.
         }
       } finally {
+        if (copied) {
+          window.trackPortfolioEvent?.("contact_email_copy");
+        }
         if (!supportsHoverCursor) {
           setBubbleToButtonCenter();
         }
@@ -116,7 +122,18 @@
     }
   }
 
+  function initContactLinkTracking() {
+    document.querySelector(".contact-linkedin")?.addEventListener("click", () => {
+      window.trackPortfolioEvent?.("contact_linkedin_click");
+    });
+
+    document.querySelector(".contact-behance")?.addEventListener("click", () => {
+      window.trackPortfolioEvent?.("contact_behance_click");
+    });
+  }
+
   syncContactScale();
   initCopyEmail();
+  initContactLinkTracking();
   window.addEventListener("resize", syncContactScale, { passive: true });
 })();

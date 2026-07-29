@@ -115,6 +115,12 @@ This keeps the `/bio` hero-photo entry animation working when navigating from th
 - Do not delete hidden/helper concepts from Figma-derived work unless Parviz explicitly says they are not needed.
 - Preserve text line breaks and text block widths from Figma.
 - For new raster assets, convert to `.webp` and reference local files.
+- Treat analytics and tracking code as deployment-sensitive:
+  - Do not change, remove, rename, or "clean up" Google Tag Manager / Google Analytics tracking code without an important reason or an explicit request from Parviz.
+  - This includes `window.trackPortfolioEvent`, `window.dataLayer` pushes, GTM/GA4 event names, event parameters, related click-tracking attributes, and similar tracking helpers added later.
+  - Current tracked event names include `contact_email_copy`, `contact_linkedin_click`, `contact_behance_click`, `bio_check_works_click`, `case_next_project_click`, `main_hey_parviz_click`, `main_nav_works_click`, and `unibank_social_vimeo_click`.
+  - If analytics or tracking code is changed for any reason, the final response must include this exact uppercase bold warning: `**IMPORTANT: ANALYTICS/TRACKING CODE CHANGED. UPDATE THE SAME FILES ON HOSTING TOO.**`
+  - When that warning is needed, also list the changed local files and any changed event names or parameters so Parviz can mirror the same change in hosting.
 - Hide context menus on portfolio media when requested or when matching an existing page pattern:
   - For normal image/GIF/WebP media, prevent the `contextmenu` event on the page-owned media wrapper and set image dragging off where useful.
   - For non-interactive Vimeo/embed media, use a transparent page-owned shield over the iframe so the browser and embed context menus cannot appear.

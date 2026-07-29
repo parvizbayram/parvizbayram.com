@@ -347,6 +347,10 @@
     }
 
     isTransitioning = true;
+    window.trackPortfolioEvent?.("case_next_project_click", {
+      from_path: normalizePath(window.location.pathname),
+      to_path: nextProject.path
+    });
     hideBubble();
     markCurrentEntryForTopRestore();
 

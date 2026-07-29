@@ -1,0 +1,38 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/fplwtfvzwx/parvizbayram.com/
+    - /bin/mkdir -p $DEPLOYPATH
+    - /bin/cp .htaccess $DEPLOYPATH
+    - /bin/cp 404.html $DEPLOYPATH
+    - /bin/cp index.html $DEPLOYPATH
+    - /bin/cp bio.html $DEPLOYPATH
+    - /bin/cp contact.html $DEPLOYPATH
+    - /bin/cp unibank.html $DEPLOYPATH
+    - /bin/cp bmmb.html $DEPLOYPATH
+    - /bin/cp orkestra.html $DEPLOYPATH
+    - /bin/cp aerosure.html $DEPLOYPATH
+    - /bin/cp pedalchi.html $DEPLOYPATH
+    - /bin/cp talktocanada.html $DEPLOYPATH
+    - /bin/cp manaw.html $DEPLOYPATH
+    - /bin/cp straudo.html $DEPLOYPATH
+    - /bin/cp styles.css $DEPLOYPATH
+    - /bin/cp script.js $DEPLOYPATH
+    - /bin/cp scale-init.js $DEPLOYPATH
+    - /bin/cp standalone-nav.js $DEPLOYPATH
+    - /bin/cp contact.js $DEPLOYPATH
+    - /bin/cp unibank.js $DEPLOYPATH
+    - /bin/cp bmmb.js $DEPLOYPATH
+    - /bin/cp orkestra.js $DEPLOYPATH
+    - /bin/cp aerosure.js $DEPLOYPATH
+    - /bin/cp pedalchi.js $DEPLOYPATH
+    - /bin/cp talktocanada.js $DEPLOYPATH
+    - /bin/cp manaw.js $DEPLOYPATH
+    - /bin/cp straudo.js $DEPLOYPATH
+    - /bin/cp next-project.js $DEPLOYPATH
+    - /bin/cp title-status.js $DEPLOYPATH
+    - /bin/cp robots.txt $DEPLOYPATH
+    - /bin/cp sitemap.xml $DEPLOYPATH
+    - /bin/rm -rf ${DEPLOYPATH}assets ${DEPLOYPATH}fonts
+    - /bin/cp -R assets $DEPLOYPATH
+    - /bin/cp -R fonts $DEPLOYPATH

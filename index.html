@@ -3,7 +3,35 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Parviz Portfolio</title>
+    <title>Parviz Bayramguliyev - Visual Designer</title>
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+    <script src="/title-status.js?v=case-page-view-1" defer></script>
+    <meta name="description" content="Portfolio of Parviz Bayram, a visual designer based in the Netherlands shaping brands, digital products, UX/UI, and brand identities.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://parvizbayram.com/">
+    <meta property="og:site_name" content="Parviz Bayram Portfolio">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Parviz Bayram — Visual Designer Portfolio">
+    <meta property="og:description" content="Portfolio of Parviz Bayram, a visual designer based in the Netherlands shaping brands, digital products, UX/UI, and brand identities.">
+    <meta property="og:url" content="https://parvizbayram.com/">
+    <meta property="og:image" content="https://parvizbayram.com/assets/main/background.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Parviz Bayram — Visual Designer Portfolio">
+    <meta name="twitter:description" content="Portfolio of Parviz Bayram, a visual designer based in the Netherlands shaping brands, digital products, UX/UI, and brand identities.">
+    <meta name="twitter:image" content="https://parvizbayram.com/assets/main/background.webp">
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Parviz Bayram",
+        "url": "https://parvizbayram.com/",
+        "jobTitle": "Visual Designer",
+        "sameAs": [
+          "https://www.linkedin.com/in/parvizbayram",
+          "https://www.behance.net/parvizbayram"
+        ]
+      }
+    </script>
     <script>
       document.documentElement.dataset.route = location.pathname.startsWith('/bio') ? 'bio' : 'main';
       document.documentElement.classList.add(location.pathname.startsWith('/bio') ? 'route-bio' : 'route-main');
@@ -18,11 +46,11 @@
       }
     </script>
     <script src="/scale-init.js?v=scale-init-1"></script>
-    <link rel="preload" href="/assets/main/background.webp" as="image" type="image/webp" fetchpriority="high">
+    <link rel="preload" href="/assets/main/background.webp" as="image" type="image/webp" fetchpriority="high" media="(min-width: 768px)">
     <link rel="preload" href="/fonts/Aeonik%20Font%20Family/Variable/AeonikPro-Regular.ttf" as="font" type="font/ttf" crossorigin>
-    <link rel="preload" href="/fonts/Aeonik%20Font%20Family/Variable/AeonikPro-RegularItalic.ttf" as="font" type="font/ttf" crossorigin>
-    <link rel="preload" href="/fonts/Editorial%20Font%20Family/EditorialNew-UltralightItalic.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="/styles.css?v=main-bg-video-fallback-1">
+    <link rel="preload" href="/fonts/Aeonik%20Font%20Family/Variable/AeonikPro-RegularItalic.ttf" as="font" type="font/ttf" crossorigin media="(min-width: 768px)">
+    <link rel="preload" href="/fonts/Editorial%20Font%20Family/EditorialNew-UltralightItalic.woff2" as="font" type="font/woff2" crossorigin media="(min-width: 768px)">
+    <link rel="stylesheet" href="/styles.css?v=returning-intro-cachefix-1">
   </head>
   <body data-route="main">
     <header class="site-header bio-header route-bio-header" data-node-id="53:111" data-name="header">
@@ -46,14 +74,16 @@
       <div class="page-stage">
         <main class="page-shell" data-node-id="5:2" data-name="main page">
           <div class="main-shell-background" aria-hidden="true">
-            <video autoplay muted loop playsinline preload="auto" poster="/assets/main/background.webp">
-              <source src="/assets/main/background.webm" type="video/webm">
-            </video>
+            <video autoplay muted loop playsinline preload="none" data-bg-video-src="/assets/main/background.webm"></video>
           </div>
 
           <header class="site-header" data-node-id="53:113" data-name="header">
             <a class="back-home" href="/" aria-label="Back to homepage" data-route-link data-route-target="main">Back to homepage</a>
-            <p class="intro-mark" data-node-id="384:153">Hey! I am Parviz</p>
+            <p class="intro-mark" data-node-id="384:153" data-returning-intro>
+              <span class="intro-mark-sizer" data-returning-intro-sizer style="display:inline-block;visibility:hidden;white-space:nowrap;">Hey! I am Parviz</span>
+              <span class="intro-mark-layer intro-mark-default" data-returning-intro-default style="position:absolute;top:0;left:0;display:inline-block;white-space:nowrap;opacity:1;transform:translateY(0);">Hey! I am Parviz</span>
+              <span class="intro-mark-layer intro-mark-message" data-returning-intro-message aria-hidden="true" style="position:absolute;top:0;left:0;display:inline-block;white-space:nowrap;opacity:0;transform:translateY(12px);"></span>
+            </p>
             <nav class="main-nav" aria-label="Main navigation" data-node-id="384:134" data-name="navigation">
               <a class="nav-link" href="#works" data-node-id="384:135">
                 <span>WORKS</span>
@@ -88,9 +118,16 @@
                 <a class="project-card project-unibank project-video-card project-no-spotlight" href="/unibank" data-name="Unibank">
                   <div class="project-card-body">
                     <div class="project-thumb" data-node-id="39:16" data-name="thumbnail">
-                      <video autoplay muted loop playsinline preload="metadata" aria-label="Unibank logo animation thumbnail">
-                        <source src="/assets/thubmnail-unibank.mp4" type="video/mp4">
-                      </video>
+                      <video
+                        data-video-src="/assets/thubmnail-unibank.mp4"
+                        data-video-poster="/assets/main/thumbs/unibank-logo-poster.webp"
+                        autoplay
+                        muted
+                        loop
+                        playsinline
+                        preload="none"
+                        aria-label="Unibank logo animation thumbnail"
+                      ></video>
                     </div>
                     <h2>Unibank — One of Country's Top Banks</h2>
                     <p>REBRANDING</p>
@@ -100,7 +137,7 @@
                 <a class="project-card project-talktocanada" href="/talktocanada" data-node-id="53:123" data-name="TalktoCanada">
                   <div class="project-card-body">
                     <div class="project-thumb" data-node-id="40:21" data-name="thumbnail">
-                      <img class="crop-talktocanada" src="/assets/talktocanada.webp" alt="TalktoCanada project thumbnail">
+                      <img class="crop-talktocanada" data-card-src="/assets/main/thumbs/talktocanada.webp" alt="TalktoCanada project thumbnail" loading="lazy" decoding="async">
                     </div>
                     <h2>TalktoCanada — Accent Reduction School</h2>
                     <p>UX/UI DESIGN</p>
@@ -110,7 +147,7 @@
                 <a class="project-card project-pedalchi" href="/pedalchi" data-node-id="53:119" data-name="Pedalchi">
                   <div class="project-card-body">
                     <div class="project-thumb" data-node-id="42:23" data-name="thumbnail">
-                      <img class="crop-pedalchi" src="/assets/thumbnail-parvizbayram.webp" alt="Pedalchi project thumbnail">
+                      <img class="crop-pedalchi" data-card-src="/assets/main/thumbs/pedalchi.webp" alt="Pedalchi project thumbnail" loading="lazy" decoding="async">
                     </div>
                     <h2>Pedalchi — Cycling Services</h2>
                     <p>BRAND IDENTITY</p>
@@ -120,7 +157,7 @@
                 <a class="project-card project-straudo" href="/straudo" data-node-id="53:120" data-name="Straudo">
                   <div class="project-card-body">
                     <div class="project-thumb" data-node-id="40:20" data-name="thumbnail">
-                      <img src="/assets/straudo.webp" alt="Straudo project thumbnail">
+                      <img data-card-src="/assets/main/thumbs/straudo.webp" alt="Straudo project thumbnail" loading="lazy" decoding="async">
                     </div>
                     <h2>Straudo — Digital Product Consultancy</h2>
                     <p>BRAND IDENTITY</p>
@@ -130,7 +167,7 @@
                 <a class="project-card project-aerosure" href="/aerosure" data-node-id="53:117" data-name="Aerosure">
                   <div class="project-card-body">
                     <div class="project-thumb" data-node-id="39:16" data-name="thumbnail">
-                      <img src="/assets/aerosure.webp" alt="Aerosure project thumbnail">
+                      <img data-card-src="/assets/main/thumbs/aerosure.webp" alt="Aerosure project thumbnail" loading="lazy" decoding="async">
                     </div>
                     <h2>Aerosure — Global Aviation Supplier</h2>
                     <p>UX/UI DESIGN</p>
@@ -140,7 +177,7 @@
                 <a class="project-card project-manaw" href="/manaw" data-node-id="53:121" data-name="Manaw">
                   <div class="project-card-body">
                     <div class="project-thumb" data-node-id="40:18" data-name="thumbnail">
-                      <img class="crop-manaw" src="/assets/manaw.webp" alt="Manaw project thumbnail">
+                      <img class="crop-manaw" data-card-src="/assets/main/thumbs/manaw.webp" alt="Manaw project thumbnail" loading="lazy" decoding="async">
                     </div>
                     <h2>Manaw — Online Supermarket</h2>
                     <p>BRAND IDENTITY</p>
@@ -151,15 +188,16 @@
                   <div class="project-card-body">
                     <div class="project-thumb" data-node-id="40:19" data-name="thumbnail">
                       <div class="project-video-cover crop-orkestra-video">
-                        <iframe
-                          src="https://player.vimeo.com/video/739765102?background=1&amp;autoplay=1&amp;loop=1&amp;autopause=0&amp;quality=1080p"
-                          width="1920"
-                          height="1080"
-                          loading="lazy"
-                          allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
-                          referrerpolicy="strict-origin-when-cross-origin"
-                          title="Orkestra project thumbnail"
-                        ></iframe>
+                        <video
+                          data-video-src="/assets/Okrestra%20-%20thumbnail.webm"
+                          data-video-poster="/assets/Okrestra%20-%20thumbnail.webp"
+                          autoplay
+                          muted
+                          loop
+                          playsinline
+                          preload="none"
+                          aria-label="Orkestra project thumbnail"
+                        ></video>
                       </div>
                     </div>
                     <h2>Orkestra — Tech Recruitment</h2>
@@ -170,7 +208,7 @@
                 <a class="project-card project-baku" href="/bmmb" data-node-id="53:118" data-name="Baku Museum of Miniature Books">
                   <div class="project-card-body">
                     <div class="project-thumb" data-node-id="42:25" data-name="thumbnail">
-                      <img class="crop-baku" src="/assets/baku-museum.webp" alt="Baku Museum of Miniature Books project thumbnail">
+                      <img class="crop-baku" data-card-src="/assets/main/thumbs/baku-museum.webp" alt="Baku Museum of Miniature Books project thumbnail" loading="lazy" decoding="async">
                     </div>
                     <h2>Baku Museum of Miniature Books</h2>
                     <p>BRAND IDENTITY</p>
@@ -202,7 +240,7 @@
           </section>
 
           <figure class="bio-photo" data-node-id="93:4" data-name="my photo">
-            <img src="/assets/bio/hero-photo.webp" alt="Parviz portrait">
+            <img data-route-src="/assets/bio/hero-photo.webp" alt="Parviz portrait" loading="eager" decoding="async" fetchpriority="high">
           </figure>
 
           <p class="bio-intro-mark" data-transition-hey-target data-node-id="53:72">Hey! I am Parviz</p>
@@ -220,7 +258,7 @@
         </section>
 
           <figure class="bio-childhood-photo" data-node-id="100:25" data-name="childhood photo">
-            <img src="/assets/bio/childhood-photo.webp" alt="Childhood photo">
+            <img data-route-src="/assets/bio/childhood-photo.webp" alt="Childhood photo" loading="lazy" decoding="async">
           </figure>
 
           <section class="bio-text bio-text-two" data-node-id="100:24" data-bio-reveal-group data-bio-reveal-sequence="2">
@@ -305,18 +343,18 @@
 
           <section class="bio-logos" aria-label="Selected clients" data-node-id="151:4" data-name="logos" data-bio-logo-group data-bio-reveal-sequence="7">
             <div class="logo-perception">
-              <img class="logo-perception-image bio-logo-item" data-bio-logo-item src="/assets/bio/perception-point.webp" alt="Perception Point">
+              <img class="logo-perception-image bio-logo-item" data-bio-logo-item data-route-src="/assets/bio/perception-point.webp" alt="Perception Point" loading="lazy" decoding="async">
             </div>
-            <img class="logo-airalo bio-logo-item" data-bio-logo-item src="/assets/bio/airalo.svg" alt="Airalo">
-            <img class="logo-un bio-logo-item" data-bio-logo-item src="/assets/bio/un.svg" alt="United Nations">
-            <img class="logo-seiko bio-logo-item" data-bio-logo-item src="/assets/bio/seiko.svg" alt="SEIKO">
-            <img class="logo-logicgate bio-logo-item" data-bio-logo-item src="/assets/bio/logicgate.svg" alt="LogicGate">
-            <img class="logo-pasha bio-logo-item" data-bio-logo-item src="/assets/bio/pasha-bank.svg" alt="Pasha Bank">
-            <img class="logo-amnis bio-logo-item" data-bio-logo-item src="/assets/bio/amnis.svg" alt="Amnis">
-            <img class="logo-redhat bio-logo-item" data-bio-logo-item src="/assets/bio/redhat.svg" alt="Red Hat">
-            <img class="logo-usaid bio-logo-item" data-bio-logo-item src="/assets/bio/usaid.svg" alt="USAID">
-            <img class="logo-gonetspeed bio-logo-item" data-bio-logo-item src="/assets/bio/gonetspeed.svg" alt="GoNetspeed">
-            <img class="logo-unibank bio-logo-item" data-bio-logo-item src="/assets/bio/unibank.svg" alt="Unibank">
+            <img class="logo-airalo bio-logo-item" data-bio-logo-item data-route-src="/assets/bio/airalo.svg" alt="Airalo" loading="lazy" decoding="async">
+            <img class="logo-un bio-logo-item" data-bio-logo-item data-route-src="/assets/bio/un.svg" alt="United Nations" loading="lazy" decoding="async">
+            <img class="logo-seiko bio-logo-item" data-bio-logo-item data-route-src="/assets/bio/seiko.svg" alt="SEIKO" loading="lazy" decoding="async">
+            <img class="logo-logicgate bio-logo-item" data-bio-logo-item data-route-src="/assets/bio/logicgate.svg" alt="LogicGate" loading="lazy" decoding="async">
+            <img class="logo-pasha bio-logo-item" data-bio-logo-item data-route-src="/assets/bio/pasha-bank.svg" alt="Pasha Bank" loading="lazy" decoding="async">
+            <img class="logo-amnis bio-logo-item" data-bio-logo-item data-route-src="/assets/bio/amnis.svg" alt="Amnis" loading="lazy" decoding="async">
+            <img class="logo-redhat bio-logo-item" data-bio-logo-item data-route-src="/assets/bio/redhat.svg" alt="Red Hat" loading="lazy" decoding="async">
+            <img class="logo-usaid bio-logo-item" data-bio-logo-item data-route-src="/assets/bio/usaid.svg" alt="USAID" loading="lazy" decoding="async">
+            <img class="logo-gonetspeed bio-logo-item" data-bio-logo-item data-route-src="/assets/bio/gonetspeed.svg" alt="GoNetspeed" loading="lazy" decoding="async">
+            <img class="logo-unibank bio-logo-item" data-bio-logo-item data-route-src="/assets/bio/unibank.svg" alt="Unibank" loading="lazy" decoding="async">
           </section>
 
         <section class="bio-quote" aria-label="Design philosophy">
@@ -339,6 +377,6 @@
       </div>
     </div>
 
-    <script src="/script.js?v=main-bg-video-fallback-1"></script>
+    <script src="/script.js?v=returning-intro-cachefix-1"></script>
   </body>
 </html>

@@ -1,0 +1,72 @@
+DirectoryIndex index.html
+Options -Indexes -MultiViews
+ErrorDocument 404 /404.html
+ErrorDocument 403 /404.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  RewriteRule ^bio/?$ index.html [L]
+  RewriteRule ^contact/?$ contact.html [L]
+  RewriteRule ^unibank/?$ unibank.html [L]
+  RewriteRule ^bmmb/?$ bmmb.html [L]
+  RewriteRule ^orkestra/?$ orkestra.html [L]
+  RewriteRule ^aerosure/?$ aerosure.html [L]
+  RewriteRule ^straudo/?$ straudo.html [L]
+  RewriteRule ^pedalchi/?$ pedalchi.html [L]
+  RewriteRule ^manaw/?$ manaw.html [L]
+  RewriteRule ^talktocanada/?$ talktocanada.html [L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME}.html -f
+  RewriteRule ^(.+?)/?$ $1.html [L]
+</IfModule>
+
+AddType image/webp .webp
+AddType image/svg+xml .svg
+AddType video/webm .webm
+AddType video/mp4 .mp4
+AddType audio/mpeg .mp3
+AddType font/ttf .ttf
+AddType font/woff2 .woff2
+AddType application/xml .xml
+AddType text/plain .txt
+
+<IfModule mod_headers.c>
+  <FilesMatch "\.(?:webp|svg|gif|jpg|jpeg|png|mp4|webm|mp3|woff2|ttf)$">
+    Header set Cache-Control "public, max-age=2592000"
+  </FilesMatch>
+
+  <FilesMatch "\.(?:css|js)$">
+    Header set Cache-Control "public, max-age=604800"
+  </FilesMatch>
+
+  <FilesMatch "\.(?:html|txt|xml)$">
+    Header set Cache-Control "public, max-age=300, must-revalidate"
+  </FilesMatch>
+</IfModule>
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/webp "access plus 30 days"
+  ExpiresByType image/svg+xml "access plus 30 days"
+  ExpiresByType image/gif "access plus 30 days"
+  ExpiresByType image/jpeg "access plus 30 days"
+  ExpiresByType image/png "access plus 30 days"
+  ExpiresByType video/webm "access plus 30 days"
+  ExpiresByType video/mp4 "access plus 30 days"
+  ExpiresByType audio/mpeg "access plus 30 days"
+  ExpiresByType font/ttf "access plus 30 days"
+  ExpiresByType font/woff2 "access plus 30 days"
+  ExpiresByType text/css "access plus 7 days"
+  ExpiresByType application/javascript "access plus 7 days"
+  ExpiresByType text/javascript "access plus 7 days"
+  ExpiresByType text/html "access plus 5 minutes"
+  ExpiresByType text/plain "access plus 5 minutes"
+  ExpiresByType application/xml "access plus 5 minutes"
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript application/javascript application/json application/xml image/svg+xml
+</IfModule>

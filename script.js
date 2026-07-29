@@ -9,6 +9,12 @@ function syncPageScale() {
   return scale;
 }
 
+const PHONE_ONLY_MEDIA = "(max-width: 767px)";
+
+function isPhoneOnlyExperience() {
+  return window.matchMedia(PHONE_ONLY_MEDIA).matches;
+}
+
 const WORKS_REVEAL_KEY = "parviz:works-reveal";
 const WORKS_POSITION_KEY = "parviz:works-position";
 
@@ -170,6 +176,111 @@ function initWorksPositionMemory() {
       // The case still opens normally when storage is unavailable.
     }
   }, { capture: true });
+}
+
+function initLazyProjectVideos() {
+  const videos = Array.from(document.querySelectorAll(".project-card video[data-video-src]"));
+  if (!videos.length) {
+    return;
+  }
+
+  if (isPhoneOnlyExperience()) {
+    return;
+  }
+
+  const hydrateVideo = (video) => {
+    if (!video || video.dataset.videoLoaded === "true") {
+      return;
+    }
+
+    const src = video.dataset.videoSrc;
+    if (!src) {
+      return;
+    }
+
+    video.dataset.videoLoaded = "true";
+    if (video.dataset.videoPoster && !video.getAttribute("poster")) {
+      video.setAttribute("poster", video.dataset.videoPoster);
+    }
+    video.src = src;
+    video.load();
+
+    const playPromise = video.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(() => {
+        // Keep the poster visible if autoplay is blocked.
+      });
+    }
+  };
+
+  if (!("IntersectionObserver" in window)) {
+    window.addEventListener("load", () => {
+      videos.forEach(hydrateVideo);
+    }, { once: true });
+    return;
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) {
+        return;
+      }
+
+      observer.unobserve(entry.target);
+      hydrateVideo(entry.target);
+    });
+  }, {
+    root: null,
+    rootMargin: "0px",
+    threshold: 0.01,
+  });
+
+  videos.forEach((video) => observer.observe(video));
+}
+
+function initLazyProjectImages() {
+  const images = Array.from(document.querySelectorAll(".project-card img[data-card-src]"));
+  if (!images.length || isPhoneOnlyExperience()) {
+    return;
+  }
+
+  const hydrateImage = (image) => {
+    if (!image || image.dataset.imageLoaded === "true") {
+      return;
+    }
+
+    const src = image.dataset.cardSrc;
+    if (!src) {
+      return;
+    }
+
+    image.dataset.imageLoaded = "true";
+    image.src = src;
+  };
+
+  if (!("IntersectionObserver" in window)) {
+    window.addEventListener("load", () => {
+      images.forEach(hydrateImage);
+    }, { once: true });
+    return;
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) {
+        return;
+      }
+
+      observer.unobserve(entry.target);
+      hydrateImage(entry.target);
+    });
+  }, {
+    root: null,
+    rootMargin: "220px 0px",
+    threshold: 0.01,
+  });
+
+  images.forEach((image) => observer.observe(image));
 }
 
 function initTiltCards() {
@@ -389,7 +500,7 @@ function initMainBackgroundVideoFallback() {
   const root = document.documentElement;
   const video = document.querySelector(".main-shell-background video");
 
-  if (!video) {
+  if (!video || isPhoneOnlyExperience()) {
     root.classList.add("has-main-bg-video-fallback");
     return;
   }
@@ -427,6 +538,11 @@ function initMainBackgroundVideoFallback() {
     window.clearTimeout(autoplayCheckId);
   });
 
+  if (video.dataset.bgVideoSrc && !video.getAttribute("src")) {
+    video.src = video.dataset.bgVideoSrc;
+    video.load();
+  }
+
   const playAttempt = video.play();
   if (playAttempt && typeof playAttempt.catch === "function") {
     playAttempt
@@ -449,6 +565,38 @@ const BIO_TO_MAIN_SCROLL_TOP_MS = 750;
 const LOOP_TOP_TOLERANCE = 1;
 const BIO_ENTRY_TRANSITION_KEY = "parviz:bio-entry-transition";
 const BIO_ENTRY_TRANSITION_PARAM = "bioEntry";
+const RETURNING_INTRO_BASE_TEXT = "Hey! I am Parviz";
+const RETURNING_INTRO_MESSAGES = [
+  "Welcome back!",
+  "Still deciding? Fair enough.",
+  "Back again. Good choice.",
+  "Still here? Let's talk!"
+];
+const RETURNING_INTRO_DELAY_MS = 1000;
+const RETURNING_INTRO_VISIBLE_MS = 3500;
+const RETURNING_INTRO_SWAP_MS = 500;
+const RETURNING_INTRO_BIO_RESET_MS = 350;
+const RETURNING_CLOSED_VISIT_GAP_MS = 60 * 60 * 1000;
+const RETURNING_OPEN_TAB_GAP_MS = 24 * 60 * 60 * 1000;
+const RETURNING_STORAGE_KEYS = {
+  firstSeenAt: "firstSeenAt",
+  lastPageHideAt: "lastPageHideAt",
+  lastMessageShownAt: "lastMessageShownAt",
+  messageIndex: "messageIndex",
+  shownThisSession: "shownThisSession"
+};
+const ROUTE_META = {
+  [ROUTE_MAIN]: {
+    title: "Parviz Bayramguliyev - Visual Designer",
+    description: "Portfolio of Parviz Bayram, a visual designer based in the Netherlands shaping brands, digital products, UX/UI, and brand identities.",
+    url: "https://parvizbayram.com/",
+  },
+  [ROUTE_BIO]: {
+    title: "Parviz's bio",
+    description: "Bio of Parviz Bayram, a visual designer based in the Netherlands with experience across brand identity, UX/UI, visual strategy, art direction, and digital design.",
+    url: "https://parvizbayram.com/bio",
+  },
+};
 const SHARED_TRANSITION_SELECTORS = [
   ".intro-mark",
   ".bio-intro-mark",
@@ -464,6 +612,42 @@ let routeTransitioning = false;
 let bioWorksNavigating = false;
 let loopResetting = false;
 let loopResetRafId = 0;
+
+function setMetaContent(selector, value) {
+  const element = document.head.querySelector(selector);
+  if (element && value) {
+    element.setAttribute("content", value);
+  }
+}
+
+function setRouteMeta(route) {
+  const meta = ROUTE_META[route] || ROUTE_META[ROUTE_MAIN];
+  document.title = meta.title;
+
+  const canonical = document.head.querySelector('link[rel="canonical"]');
+  if (canonical) {
+    canonical.setAttribute("href", meta.url);
+  }
+
+  setMetaContent('meta[name="description"]', meta.description);
+  setMetaContent('meta[property="og:title"]', meta.title);
+  setMetaContent('meta[property="og:description"]', meta.description);
+  setMetaContent('meta[property="og:url"]', meta.url);
+  setMetaContent('meta[name="twitter:title"]', meta.title);
+  setMetaContent('meta[name="twitter:description"]', meta.description);
+}
+
+function hydrateRouteAssetsFor(route) {
+  if (route !== ROUTE_BIO) {
+    return;
+  }
+
+  document.querySelectorAll('.route-bio img[data-route-src]').forEach((image) => {
+    if (!image.getAttribute("src")) {
+      image.setAttribute("src", image.dataset.routeSrc);
+    }
+  });
+}
 
 function consumeBioEntryTransitionIntent() {
   if (currentRoute !== ROUTE_BIO) {
@@ -538,6 +722,439 @@ function consumeSavedWorksPosition() {
   } catch (error) {
     return null;
   }
+}
+
+let returningIntroDelayId = 0;
+let returningIntroRestoreId = 0;
+let returningIntroToken = 0;
+let returningIntroCurrentText = RETURNING_INTRO_BASE_TEXT;
+let returningIntroCycleActive = false;
+let returningIntroSessionWasPresent = false;
+let returningIntroCanUseClosedGap = false;
+
+function getReturningLocalValue(key) {
+  try {
+    return window.localStorage.getItem(key);
+  } catch (error) {
+    return null;
+  }
+}
+
+function setReturningLocalValue(key, value) {
+  try {
+    window.localStorage.setItem(key, String(value));
+  } catch (error) {
+    // Returning-visitor copy is an enhancement; ignore blocked storage.
+  }
+}
+
+function getReturningSessionValue(key) {
+  try {
+    return window.sessionStorage.getItem(key);
+  } catch (error) {
+    return null;
+  }
+}
+
+function setReturningSessionValue(key, value) {
+  try {
+    window.sessionStorage.setItem(key, String(value));
+  } catch (error) {
+    // Returning-visitor copy is an enhancement; ignore blocked storage.
+  }
+}
+
+function getReturningIntroElements() {
+  const root = document.querySelector("[data-returning-intro]");
+  return {
+    root,
+    sizer: root?.querySelector("[data-returning-intro-sizer]") || null,
+    defaultLayer: root?.querySelector("[data-returning-intro-default]") || null,
+    messageLayer: root?.querySelector("[data-returning-intro-message]") || null
+  };
+}
+
+function setReturningIntroSizer(text) {
+  const { sizer } = getReturningIntroElements();
+  if (sizer) {
+    sizer.textContent = text || RETURNING_INTRO_BASE_TEXT;
+  }
+}
+
+function renderReturningIntroWords(layer, text) {
+  if (!layer) {
+    return [];
+  }
+
+  const words = String(text || RETURNING_INTRO_BASE_TEXT).trim().split(/\s+/).filter(Boolean);
+  layer.replaceChildren();
+  layer.setAttribute("aria-label", text || RETURNING_INTRO_BASE_TEXT);
+
+  words.forEach((word, index) => {
+    const wordMask = document.createElement("span");
+    const wordInner = document.createElement("span");
+    wordMask.className = "intro-mark-word";
+    wordInner.className = "intro-mark-word-inner";
+    wordInner.textContent = word;
+    wordMask.appendChild(wordInner);
+    layer.appendChild(wordMask);
+
+    if (index < words.length - 1) {
+      layer.appendChild(document.createTextNode(" "));
+    }
+  });
+
+  return Array.from(layer.querySelectorAll(".intro-mark-word-inner"));
+}
+
+function resetReturningIntroLayerStyles(layer) {
+  if (!layer) {
+    return;
+  }
+
+  layer.getAnimations({ subtree: true }).forEach((animation) => animation.cancel());
+  layer.style.removeProperty("transform");
+  layer.style.removeProperty("opacity");
+  layer.querySelectorAll(".intro-mark-word-inner").forEach((word) => {
+    word.style.removeProperty("transform");
+    word.style.removeProperty("opacity");
+  });
+}
+
+function setReturningIntroImmediate(text = RETURNING_INTRO_BASE_TEXT) {
+  const { defaultLayer, messageLayer } = getReturningIntroElements();
+  if (!defaultLayer || !messageLayer) {
+    returningIntroCurrentText = RETURNING_INTRO_BASE_TEXT;
+    return;
+  }
+
+  resetReturningIntroLayerStyles(defaultLayer);
+  resetReturningIntroLayerStyles(messageLayer);
+
+  returningIntroCurrentText = text;
+  setReturningIntroSizer(text);
+
+  if (text === RETURNING_INTRO_BASE_TEXT) {
+    renderReturningIntroWords(defaultLayer, RETURNING_INTRO_BASE_TEXT);
+    renderReturningIntroWords(messageLayer, "");
+    defaultLayer.style.opacity = "1";
+    defaultLayer.style.transform = "translateY(0)";
+    messageLayer.style.opacity = "0";
+    messageLayer.style.transform = "translateY(12px)";
+    messageLayer.setAttribute("aria-hidden", "true");
+    return;
+  }
+
+  renderReturningIntroWords(messageLayer, text);
+  messageLayer.removeAttribute("aria-hidden");
+  defaultLayer.style.opacity = "0";
+  defaultLayer.style.transform = "translateY(-12px)";
+  messageLayer.style.opacity = "1";
+  messageLayer.style.transform = "translateY(0)";
+}
+
+function animateReturningIntroTo(text, duration = RETURNING_INTRO_SWAP_MS) {
+  const { defaultLayer, messageLayer } = getReturningIntroElements();
+  if (!defaultLayer || !messageLayer || returningIntroCurrentText === text) {
+    setReturningIntroImmediate(text);
+    return Promise.resolve();
+  }
+
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (prefersReducedMotion || duration <= 0) {
+    setReturningIntroImmediate(text);
+    return Promise.resolve();
+  }
+
+  resetReturningIntroLayerStyles(defaultLayer);
+  resetReturningIntroLayerStyles(messageLayer);
+
+  const outgoingLayer = returningIntroCurrentText === RETURNING_INTRO_BASE_TEXT ? defaultLayer : messageLayer;
+  const incomingLayer = text === RETURNING_INTRO_BASE_TEXT ? defaultLayer : messageLayer;
+
+  if (text !== RETURNING_INTRO_BASE_TEXT) {
+    renderReturningIntroWords(messageLayer, text);
+    messageLayer.removeAttribute("aria-hidden");
+  } else {
+    renderReturningIntroWords(defaultLayer, RETURNING_INTRO_BASE_TEXT);
+  }
+
+  setReturningIntroSizer(text);
+  outgoingLayer.style.opacity = "1";
+  outgoingLayer.style.transform = "translateY(0)";
+  incomingLayer.style.opacity = "0";
+  incomingLayer.style.transform = "translateY(0)";
+
+  const outgoingWords = Array.from(outgoingLayer.querySelectorAll(".intro-mark-word-inner"));
+  const incomingWords = Array.from(incomingLayer.querySelectorAll(".intro-mark-word-inner"));
+  const stagger = Math.min(60, Math.max(20, duration * 0.12));
+  const easing = "cubic-bezier(0.5, 0, 0.5, 1)";
+  const animations = [];
+
+  outgoingWords.forEach((word, index) => {
+    word.style.opacity = "1";
+    word.style.transform = "translateY(0)";
+    animations.push(word.animate(
+      [
+        { opacity: 1, transform: "translateY(0)" },
+        { opacity: 0, transform: "translateY(-115%)" }
+      ],
+      { duration, delay: index * stagger, easing, fill: "forwards" }
+    ).finished);
+  });
+
+  incomingWords.forEach((word, index) => {
+    word.style.opacity = "0";
+    word.style.transform = "translateY(115%)";
+    animations.push(word.animate(
+      [
+        { opacity: 0, transform: "translateY(115%)" },
+        { opacity: 1, transform: "translateY(0)" }
+      ],
+      { duration, delay: index * stagger, easing, fill: "forwards" }
+    ).finished);
+  });
+
+  const layerDuration = duration + Math.max(outgoingWords.length, incomingWords.length, 1) * stagger;
+  animations.push(outgoingLayer.animate(
+    [{ opacity: 1 }, { opacity: 0 }],
+    { duration: Math.max(1, layerDuration), easing, fill: "forwards" }
+  ).finished);
+  animations.push(incomingLayer.animate(
+    [{ opacity: 0 }, { opacity: 1 }],
+    { duration: Math.max(1, layerDuration), easing, fill: "forwards" }
+  ).finished);
+
+  return Promise.allSettled(animations).then(() => {
+    returningIntroCurrentText = text;
+    outgoingLayer.style.opacity = "0";
+    outgoingLayer.style.transform = "translateY(-16px)";
+    incomingLayer.style.opacity = "1";
+    incomingLayer.style.transform = "translateY(0)";
+
+    if (text === RETURNING_INTRO_BASE_TEXT) {
+      renderReturningIntroWords(messageLayer, "");
+      messageLayer.setAttribute("aria-hidden", "true");
+      setReturningIntroSizer(RETURNING_INTRO_BASE_TEXT);
+    }
+  });
+}
+
+function clearReturningIntroTimers() {
+  window.clearTimeout(returningIntroDelayId);
+  window.clearTimeout(returningIntroRestoreId);
+  returningIntroDelayId = 0;
+  returningIntroRestoreId = 0;
+}
+
+function markReturningIntroShown(now = Date.now()) {
+  const currentIndex = Number.parseInt(
+    getReturningLocalValue(RETURNING_STORAGE_KEYS.messageIndex) || "0",
+    10
+  );
+  const nextIndex = Number.isFinite(currentIndex)
+    ? (currentIndex + 1) % RETURNING_INTRO_MESSAGES.length
+    : 1;
+
+  setReturningLocalValue(RETURNING_STORAGE_KEYS.lastMessageShownAt, now);
+  setReturningLocalValue(RETURNING_STORAGE_KEYS.messageIndex, nextIndex);
+  setReturningSessionValue(RETURNING_STORAGE_KEYS.shownThisSession, "1");
+}
+
+function getReturningIntroMessage() {
+  const index = Number.parseInt(
+    getReturningLocalValue(RETURNING_STORAGE_KEYS.messageIndex) || "0",
+    10
+  );
+  return RETURNING_INTRO_MESSAGES[
+    Number.isFinite(index) ? index % RETURNING_INTRO_MESSAGES.length : 0
+  ];
+}
+
+function isReturningIntroEligible() {
+  if (currentRoute !== ROUTE_MAIN || isPhoneOnlyExperience()) {
+    return false;
+  }
+
+  const now = Date.now();
+  const firstSeenAt = Number(getReturningLocalValue(RETURNING_STORAGE_KEYS.firstSeenAt) || 0);
+  if (!firstSeenAt) {
+    setReturningLocalValue(RETURNING_STORAGE_KEYS.firstSeenAt, now);
+    return false;
+  }
+
+  if (getReturningSessionValue(RETURNING_STORAGE_KEYS.shownThisSession) === "1") {
+    return false;
+  }
+
+  const lastPageHideAt = Number(getReturningLocalValue(RETURNING_STORAGE_KEYS.lastPageHideAt) || 0);
+  if (!lastPageHideAt) {
+    return false;
+  }
+
+  const useClosedVisitGap = returningIntroCanUseClosedGap;
+  returningIntroCanUseClosedGap = false;
+
+  const lastMessageShownAt = Number(getReturningLocalValue(RETURNING_STORAGE_KEYS.lastMessageShownAt) || 0);
+  if (lastMessageShownAt && now - lastMessageShownAt < RETURNING_CLOSED_VISIT_GAP_MS) {
+    return false;
+  }
+
+  const requiredGap = useClosedVisitGap
+    ? RETURNING_CLOSED_VISIT_GAP_MS
+    : RETURNING_OPEN_TAB_GAP_MS;
+
+  return now - lastPageHideAt >= requiredGap;
+}
+
+function scheduleReturningIntro() {
+  clearReturningIntroTimers();
+
+  if (!isReturningIntroEligible()) {
+    return;
+  }
+
+  const token = ++returningIntroToken;
+  const message = getReturningIntroMessage();
+  returningIntroCycleActive = true;
+
+  returningIntroDelayId = window.setTimeout(() => {
+    if (token !== returningIntroToken || currentRoute !== ROUTE_MAIN) {
+      return;
+    }
+
+    animateReturningIntroTo(message, RETURNING_INTRO_SWAP_MS).then(() => {
+      if (token !== returningIntroToken || currentRoute !== ROUTE_MAIN) {
+        return;
+      }
+
+      markReturningIntroShown();
+      returningIntroRestoreId = window.setTimeout(() => {
+        if (token !== returningIntroToken || currentRoute !== ROUTE_MAIN) {
+          return;
+        }
+
+        animateReturningIntroTo(RETURNING_INTRO_BASE_TEXT, RETURNING_INTRO_SWAP_MS).finally(() => {
+          if (token === returningIntroToken) {
+            returningIntroCycleActive = false;
+          }
+        });
+      }, RETURNING_INTRO_VISIBLE_MS);
+    });
+  }, RETURNING_INTRO_DELAY_MS);
+}
+
+function cancelReturningIntro({ restore = true, duration = RETURNING_INTRO_SWAP_MS } = {}) {
+  clearReturningIntroTimers();
+  returningIntroToken += 1;
+
+  if (!restore || returningIntroCurrentText === RETURNING_INTRO_BASE_TEXT) {
+    returningIntroCycleActive = false;
+    if (!restore) {
+      setReturningIntroImmediate(RETURNING_INTRO_BASE_TEXT);
+    }
+    return Promise.resolve();
+  }
+
+  return animateReturningIntroTo(RETURNING_INTRO_BASE_TEXT, duration).finally(() => {
+    returningIntroCycleActive = false;
+  });
+}
+
+function prepareReturningIntroForBioNavigation() {
+  if (currentRoute !== ROUTE_MAIN || !returningIntroCycleActive) {
+    return Promise.resolve();
+  }
+
+  return cancelReturningIntro({ restore: true, duration: RETURNING_INTRO_BIO_RESET_MS });
+}
+
+function noteReturningIntroPageHide() {
+  if (!isPhoneOnlyExperience()) {
+    setReturningLocalValue(RETURNING_STORAGE_KEYS.lastPageHideAt, Date.now());
+  }
+}
+
+function handleRouteChangeForReturningIntro(route) {
+  if (route === ROUTE_MAIN) {
+    scheduleReturningIntro();
+    return;
+  }
+
+  cancelReturningIntro({ restore: false });
+}
+
+function initReturningIntroPreviewTools() {
+  if (!["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+    return;
+  }
+
+  window.previewReturningIntroMessage = (messageIndex = 0) => {
+    if (currentRoute !== ROUTE_MAIN || isPhoneOnlyExperience()) {
+      return "Open http://localhost:3000/ on a non-phone viewport first.";
+    }
+
+    const index = Number.parseInt(messageIndex, 10);
+    const message = RETURNING_INTRO_MESSAGES[
+      Number.isFinite(index) ? ((index % RETURNING_INTRO_MESSAGES.length) + RETURNING_INTRO_MESSAGES.length) % RETURNING_INTRO_MESSAGES.length : 0
+    ];
+    const token = ++returningIntroToken;
+
+    clearReturningIntroTimers();
+    returningIntroCycleActive = true;
+    setReturningSessionValue(RETURNING_STORAGE_KEYS.shownThisSession, "0");
+
+    returningIntroDelayId = window.setTimeout(() => {
+      if (token !== returningIntroToken || currentRoute !== ROUTE_MAIN) {
+        return;
+      }
+
+      animateReturningIntroTo(message, RETURNING_INTRO_SWAP_MS).then(() => {
+        if (token !== returningIntroToken || currentRoute !== ROUTE_MAIN) {
+          return;
+        }
+
+        returningIntroRestoreId = window.setTimeout(() => {
+          if (token !== returningIntroToken || currentRoute !== ROUTE_MAIN) {
+            return;
+          }
+
+          animateReturningIntroTo(RETURNING_INTRO_BASE_TEXT, RETURNING_INTRO_SWAP_MS).finally(() => {
+            if (token === returningIntroToken) {
+              returningIntroCycleActive = false;
+            }
+          });
+        }, RETURNING_INTRO_VISIBLE_MS);
+      });
+    }, RETURNING_INTRO_DELAY_MS);
+
+    return `Preview scheduled: ${message}`;
+  };
+}
+
+function initReturningIntroMemory() {
+  returningIntroSessionWasPresent = getReturningSessionValue(RETURNING_STORAGE_KEYS.shownThisSession) !== null;
+  returningIntroCanUseClosedGap = !returningIntroSessionWasPresent;
+  if (!returningIntroSessionWasPresent) {
+    setReturningSessionValue(RETURNING_STORAGE_KEYS.shownThisSession, "0");
+  }
+
+  setReturningIntroImmediate(RETURNING_INTRO_BASE_TEXT);
+
+  window.addEventListener("pagehide", noteReturningIntroPageHide);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      noteReturningIntroPageHide();
+      return;
+    }
+
+    if (document.visibilityState === "visible" && currentRoute === ROUTE_MAIN) {
+      scheduleReturningIntro();
+    }
+  });
+
+  scheduleReturningIntro();
+  initReturningIntroPreviewTools();
 }
 
 function getRouteFromPath(pathname) {
@@ -641,6 +1258,8 @@ function animateMainLoopToWorks(duration = WORKS_LAYOUT.revealDuration) {
 
 function updateRouteClasses(route) {
   const isBio = route === ROUTE_BIO;
+  hydrateRouteAssetsFor(route);
+  setRouteMeta(route);
   document.documentElement.dataset.route = route;
   document.documentElement.classList.toggle("route-bio", isBio);
   document.documentElement.classList.toggle("route-main", !isBio);
@@ -671,6 +1290,7 @@ function updateRouteClasses(route) {
   window.scrollTo(0, 0);
   currentRoute = route;
   requestBioScrollSync();
+  handleRouteChangeForReturningIntro(route);
 }
 
 function syncRouteBackgroundOpacity(route = currentRoute) {
@@ -1604,6 +2224,7 @@ function playInitialBioEntryTransition(intent) {
     return;
   }
 
+  hydrateRouteAssetsFor(ROUTE_BIO);
   const photoTransition = createBioPhotoTransition(ROUTE_MAIN, ROUTE_BIO);
   if (!photoTransition) {
     document.documentElement.classList.remove("has-pending-bio-entry");
@@ -1665,6 +2286,7 @@ function animateRouteTransition(fromRoute, toRoute, sharedTransition = null, pho
 
 function performRouteTransition(route, options = {}) {
   const previousRoute = currentRoute;
+  hydrateRouteAssetsFor(route);
   const sharedTransition = createSharedRouteTransition(previousRoute, route);
   const photoTransition = createBioPhotoTransition(previousRoute, route);
   const backgroundTransition = createMainBackgroundRouteTransition(previousRoute, route);
@@ -1715,6 +2337,7 @@ function navigateToRoute(route, options = {}) {
   }
 
   routeTransitioning = true;
+  hydrateRouteAssetsFor(route);
   history.pushState({ route, revealWorks: Boolean(options.revealWorks) }, "", getRoutePath(route));
   const previousRoute = currentRoute;
 
@@ -1734,6 +2357,10 @@ function initSpaRouting() {
     if (!anchor) {
       return;
     }
+    if (event.portfolioRouteHandled) {
+      return;
+    }
+    event.portfolioRouteHandled = true;
 
     if (anchor.hasAttribute("data-bio-works-cta")) {
       event.preventDefault();
@@ -1741,6 +2368,7 @@ function initSpaRouting() {
         return;
       }
 
+      window.trackPortfolioEvent?.("bio_check_works_click");
       bioWorksNavigating = true;
       smoothScrollToTop(1000)
         .then(() => {
@@ -1808,10 +2436,31 @@ function initSpaRouting() {
       return;
     }
 
+    if (currentRoute === ROUTE_MAIN && nextRoute === ROUTE_BIO) {
+      prepareReturningIntroForBioNavigation().then(() => {
+        navigateToRoute(nextRoute);
+      });
+      return;
+    }
+
     navigateToRoute(nextRoute);
   };
 
   document.addEventListener("click", handleRouteClick);
+
+  const mainIntroMark = document.querySelector(".route-main [data-returning-intro]");
+  mainIntroMark?.addEventListener("click", () => {
+    if (currentRoute === ROUTE_MAIN) {
+      window.trackPortfolioEvent?.("main_hey_parviz_click");
+    }
+  });
+
+  const mainWorksNav = document.querySelector('.route-main .main-nav a[href="#works"]');
+  mainWorksNav?.addEventListener("click", () => {
+    if (currentRoute === ROUTE_MAIN) {
+      window.trackPortfolioEvent?.("main_nav_works_click");
+    }
+  });
 
   document.querySelectorAll("[data-route-link]").forEach((anchor) => {
     anchor.addEventListener("click", handleRouteClick);
@@ -1821,9 +2470,15 @@ function initSpaRouting() {
     const nextRoute = getRouteFromPath(window.location.pathname);
     const revealWorks = nextRoute === ROUTE_MAIN && window.location.hash === "#works";
     routeTransitioning = true;
+    hydrateRouteAssetsFor(nextRoute);
     const previousRoute = currentRoute;
 
-    maybeResetMainLoopBeforeBio(previousRoute, nextRoute)
+    const prepareIntro = previousRoute === ROUTE_MAIN && nextRoute === ROUTE_BIO
+      ? prepareReturningIntroForBioNavigation()
+      : Promise.resolve();
+
+    prepareIntro
+      .then(() => maybeResetMainLoopBeforeBio(previousRoute, nextRoute))
       .then(() => {
         if (nextRoute === currentRoute) {
           routeTransitioning = false;
@@ -1860,34 +2515,42 @@ if (Number.isFinite(savedWorksPosition)) {
   loopOffset = savedWorksPosition;
 }
 
-syncPageScale();
-layoutWorksGrid();
-buildLoopedWorks();
-syncLoopOffset(loopOffset);
-initMainBackgroundVideoFallback();
-initWorksPositionMemory();
-initTiltCards();
-window.addEventListener("wheel", handleWheel, { passive: false });
-initWorksTouchScroll();
-initBioScrollControls();
-initBioScrollText();
-initSpaRouting();
-applyRoute(currentRoute, { replaceHistory: true });
-if (shouldRevealWorksOnLoad) {
-  history.replaceState({ route: ROUTE_MAIN, revealWorks: true }, "", "/");
-  window.scrollTo(0, 0);
-  window.requestAnimationFrame(() => {
-    animateMainLoopToWorks();
-  });
-} else if (Number.isFinite(savedWorksPosition)) {
-  history.replaceState({ route: ROUTE_MAIN, restoreWorks: true }, "", "/");
-  window.scrollTo(0, 0);
-}
-playInitialBioEntryTransition(initialBioEntryIntent);
-window.addEventListener("resize", () => {
+if (isPhoneOnlyExperience()) {
+  document.documentElement.classList.add("is-ready");
+} else {
+  hydrateRouteAssetsFor(currentRoute);
   syncPageScale();
   layoutWorksGrid();
-  loopOffset = syncLoopOffset(loopOffset);
-  requestBioScrollSync();
-});
-document.documentElement.classList.add("is-ready");
+  buildLoopedWorks();
+  initLazyProjectImages();
+  initLazyProjectVideos();
+  syncLoopOffset(loopOffset);
+  initMainBackgroundVideoFallback();
+  initWorksPositionMemory();
+  initTiltCards();
+  window.addEventListener("wheel", handleWheel, { passive: false });
+  initWorksTouchScroll();
+  initBioScrollControls();
+  initBioScrollText();
+  initSpaRouting();
+  initReturningIntroMemory();
+  applyRoute(currentRoute, { replaceHistory: true });
+  if (shouldRevealWorksOnLoad) {
+    history.replaceState({ route: ROUTE_MAIN, revealWorks: true }, "", "/");
+    window.scrollTo(0, 0);
+    window.requestAnimationFrame(() => {
+      animateMainLoopToWorks();
+    });
+  } else if (Number.isFinite(savedWorksPosition)) {
+    history.replaceState({ route: ROUTE_MAIN, restoreWorks: true }, "", "/");
+    window.scrollTo(0, 0);
+  }
+  playInitialBioEntryTransition(initialBioEntryIntent);
+  window.addEventListener("resize", () => {
+    syncPageScale();
+    layoutWorksGrid();
+    loopOffset = syncLoopOffset(loopOffset);
+    requestBioScrollSync();
+  });
+  document.documentElement.classList.add("is-ready");
+}

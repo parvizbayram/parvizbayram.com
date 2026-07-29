@@ -499,9 +499,31 @@
       });
   }
 
+  function initSocialVimeoTracking() {
+    document.querySelectorAll(".social-video iframe").forEach((iframe, index) => {
+      const wrapper = iframe.closest(".social-video");
+      if (!wrapper) {
+        return;
+      }
+
+      wrapper.dataset.socialVideoIndex = String(index + 1);
+      const clickLayer = document.createElement("span");
+      clickLayer.className = "social-video-click-layer";
+      clickLayer.setAttribute("aria-hidden", "true");
+      clickLayer.addEventListener("click", () => {
+        window.trackPortfolioEvent?.("unibank_social_vimeo_click", {
+          video_index: index + 1,
+          video_title: iframe.getAttribute("title") || ""
+        });
+      });
+      wrapper.appendChild(clickLayer);
+    });
+  }
+
   syncUnibankScale();
   initScrollToTop();
   initRadioPlayers();
+  initSocialVimeoTracking();
   window.addEventListener("resize", syncUnibankScale, { passive: true });
   window.addEventListener("resize", drawAllRadioWaveforms, { passive: true });
   window.addEventListener("resize", updateAllRadioTranscripts, { passive: true });
