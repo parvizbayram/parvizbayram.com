@@ -9,6 +9,7 @@ ErrorDocument 403 /404.html
   RewriteRule ^bio/?$ index.html [L]
   RewriteRule ^contact/?$ contact.html [L]
   RewriteRule ^unibank/?$ unibank.html [L]
+  RewriteRule ^mandrillaz/?$ mandrillaz.html [L]
   RewriteRule ^bmmb/?$ bmmb.html [L]
   RewriteRule ^orkestra/?$ orkestra.html [L]
   RewriteRule ^aerosure/?$ aerosure.html [L]

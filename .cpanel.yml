@@ -9,6 +9,7 @@ deployment:
     - /bin/cp bio.html $DEPLOYPATH
     - /bin/cp contact.html $DEPLOYPATH
     - /bin/cp unibank.html $DEPLOYPATH
+    - /bin/cp mandrillaz.html $DEPLOYPATH
     - /bin/cp bmmb.html $DEPLOYPATH
     - /bin/cp orkestra.html $DEPLOYPATH
     - /bin/cp aerosure.html $DEPLOYPATH
@@ -22,6 +23,7 @@ deployment:
     - /bin/cp standalone-nav.js $DEPLOYPATH
     - /bin/cp contact.js $DEPLOYPATH
     - /bin/cp unibank.js $DEPLOYPATH
+    - /bin/cp mandrillaz.js $DEPLOYPATH
     - /bin/cp bmmb.js $DEPLOYPATH
     - /bin/cp orkestra.js $DEPLOYPATH
     - /bin/cp aerosure.js $DEPLOYPATH
