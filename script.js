@@ -10,9 +10,70 @@ function syncPageScale() {
 }
 
 const PHONE_ONLY_MEDIA = "(max-width: 767px)";
+const SHORT_HERO_LOCKUP_MEDIA = "(min-width: 1280px) and (max-height: 1079px)";
+const shortHeroLockupQuery = window.matchMedia(SHORT_HERO_LOCKUP_MEDIA);
+let heroLockupMeasureCanvas = null;
 
 function isPhoneOnlyExperience() {
   return window.matchMedia(PHONE_ONLY_MEDIA).matches;
+}
+
+function getHeroLockupMeasureContext() {
+  if (!heroLockupMeasureCanvas) {
+    heroLockupMeasureCanvas = document.createElement("canvas");
+  }
+
+  return heroLockupMeasureCanvas.getContext("2d");
+}
+
+function getActiveHeroTitleElement() {
+  const route = document.documentElement.dataset.route;
+
+  if (route === "bio") {
+    return document.querySelector(".route-bio .bio-hero-title") || document.querySelector(".bio-hero-title");
+  }
+
+  return document.querySelector(".route-main .hero-title") || document.querySelector(".hero-title");
+}
+
+function syncHeroLockupMetrics() {
+  const root = document.documentElement;
+
+  if (!shortHeroLockupQuery.matches) {
+    root.style.removeProperty("--short-hero-title-measured-width");
+    return;
+  }
+
+  const title = getActiveHeroTitleElement();
+  const text = (title?.textContent || "").trim();
+
+  if (!title || !text) {
+    return;
+  }
+
+  const style = window.getComputedStyle(title);
+  const context = getHeroLockupMeasureContext();
+
+  if (!context) {
+    return;
+  }
+
+  context.font = `${style.fontStyle} ${style.fontVariant} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+
+  const metrics = context.measureText(text);
+  const measuredTextWidth =
+    Number.isFinite(metrics.actualBoundingBoxRight) && metrics.actualBoundingBoxRight > 0
+      ? metrics.actualBoundingBoxRight
+      : metrics.width;
+  const letterSpacing = Number.parseFloat(style.letterSpacing);
+  const letterSpacingWidth = Number.isFinite(letterSpacing)
+    ? letterSpacing * Math.max(text.length - 1, 0)
+    : 0;
+  const width = Math.ceil(measuredTextWidth + letterSpacingWidth);
+
+  if (width > 0) {
+    root.style.setProperty("--short-hero-title-measured-width", `${width}px`);
+  }
 }
 
 const WORKS_REVEAL_KEY = "parviz:works-reveal";
@@ -1340,8 +1401,9 @@ function updateRouteClasses(route) {
   document.body.classList.remove("is-page-entering");
 
   syncPageScale();
-  window.scrollTo(0, 0);
   currentRoute = route;
+  syncHeroLockupMetrics();
+  window.scrollTo(0, 0);
   requestBioScrollSync();
   handleRouteChangeForReturningIntro(route);
 }
@@ -2573,6 +2635,7 @@ if (isPhoneOnlyExperience()) {
 } else {
   hydrateRouteAssetsFor(currentRoute);
   syncPageScale();
+  syncHeroLockupMetrics();
   layoutWorksGrid();
   buildLoopedWorks();
   initLazyProjectImages();
@@ -2601,9 +2664,25 @@ if (isPhoneOnlyExperience()) {
   playInitialBioEntryTransition(initialBioEntryIntent);
   window.addEventListener("resize", () => {
     syncPageScale();
+    syncHeroLockupMetrics();
     layoutWorksGrid();
     loopOffset = syncLoopOffset(loopOffset);
     requestBioScrollSync();
   });
+  if (document.fonts?.ready) {
+    document.fonts.ready
+      .then(() => {
+        syncHeroLockupMetrics();
+      })
+      .catch(() => {});
+  }
+  const handleShortHeroLockupChange = () => {
+    syncHeroLockupMetrics();
+  };
+  if (typeof shortHeroLockupQuery.addEventListener === "function") {
+    shortHeroLockupQuery.addEventListener("change", handleShortHeroLockupChange);
+  } else if (typeof shortHeroLockupQuery.addListener === "function") {
+    shortHeroLockupQuery.addListener(handleShortHeroLockupChange);
+  }
   document.documentElement.classList.add("is-ready");
 }

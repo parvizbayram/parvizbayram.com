@@ -13,6 +13,7 @@
     "/manaw",
     "/orkestra",
     "/bmmb",
+    "/mandrillaz",
   ]);
   const INACTIVE_TITLE = "(1) New Hire";
   const ACTIVE_FAVICON = "#76B9EF";
