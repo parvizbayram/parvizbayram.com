@@ -5146,6 +5146,11 @@ html.has-pending-bio-entry .bio-photo {
     letter-spacing: 0.6px;
   }
 
+  html.mandrillaz-document .mandrillaz-ux-anchor {
+    font-size: calc(34px * var(--page-scale, 1));
+    letter-spacing: calc(0.68px * var(--page-scale, 1));
+  }
+
   html.mandrillaz-document .mandrillaz-content > .mandrillaz-copy-columns {
     top: 3480px;
   }
