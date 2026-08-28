@@ -68,8 +68,57 @@
     });
   }
 
+  function initUxAnchor() {
+    const anchor = document.querySelector("[data-mandrillaz-ux-anchor]");
+    const logoVideo = document.querySelector(".mandrillaz-logo-video");
+    const digitalProduct = document.querySelector("#digital-product");
+    if (!anchor || !logoVideo || !digitalProduct) {
+      return;
+    }
+
+    let ticking = false;
+
+    function setAnchorVisibility() {
+      const logoRect = logoVideo.getBoundingClientRect();
+      const digitalRect = digitalProduct.getBoundingClientRect();
+      const logoTriggerTop = -(logoRect.height * 0.3);
+      const isPastLogoTrigger = logoRect.top <= logoTriggerTop;
+      const isBeforeDigitalMiddle = digitalRect.top > window.innerHeight * 0.5;
+      const shouldShow = isPastLogoTrigger && isBeforeDigitalMiddle;
+
+      anchor.classList.toggle("is-visible", shouldShow);
+      anchor.setAttribute("aria-hidden", shouldShow ? "false" : "true");
+    }
+
+    function requestVisibilityUpdate() {
+      if (ticking) {
+        return;
+      }
+
+      ticking = true;
+      requestAnimationFrame(() => {
+        setAnchorVisibility();
+        ticking = false;
+      });
+    }
+
+    anchor.addEventListener("click", (event) => {
+      event.preventDefault();
+      const targetTop = window.scrollY + digitalProduct.getBoundingClientRect().top - (window.innerHeight * 0.2);
+      window.scrollTo({
+        top: Math.max(0, targetTop),
+        behavior: "smooth"
+      });
+    });
+
+    setAnchorVisibility();
+    window.addEventListener("scroll", requestVisibilityUpdate, { passive: true });
+    window.addEventListener("resize", requestVisibilityUpdate, { passive: true });
+  }
+
   syncMandrillazScale();
   blockMediaContextMenus();
+  initUxAnchor();
   window.addEventListener("load", syncMandrillazScale, { once: true });
   window.addEventListener("resize", syncMandrillazScale, { passive: true });
 })();
