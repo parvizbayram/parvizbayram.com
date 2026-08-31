@@ -18,6 +18,7 @@ const mimeTypes = {
   ".ttf": "font/ttf",
   ".woff2": "font/woff2",
   ".txt": "text/plain; charset=utf-8",
+  ".md": "text/markdown; charset=utf-8",
   ".xml": "application/xml; charset=utf-8",
   ".json": "application/json; charset=utf-8",
   ".mp3": "audio/mpeg",
@@ -41,7 +42,7 @@ function sendFile(request, response, filePath, stats, statusCode = 200) {
     ".mp4",
     ".webm"
   ]);
-  const shortCacheExtensions = new Set([".html", ".txt", ".xml"]);
+  const shortCacheExtensions = new Set([".html", ".txt", ".md", ".xml"]);
   const etag = `"${stats.size}-${Math.floor(stats.mtimeMs)}"`;
   const headers = {
     "Content-Type": contentType,
@@ -137,6 +138,8 @@ const server = http.createServer((request, response) => {
   const routePath =
     safePath === "/"
       ? "index.html"
+      : safePath === "/bio" || safePath === "/bio/"
+        ? "bio.html"
       : safePath === "/contact" || safePath === "/contact/"
         ? "contact.html"
         : safePath === "/unibank" || safePath === "/unibank/"

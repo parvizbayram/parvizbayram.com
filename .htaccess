@@ -6,7 +6,7 @@ ErrorDocument 403 /404.html
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-  RewriteRule ^bio/?$ index.html [L]
+  RewriteRule ^bio/?$ bio.html [L]
   RewriteRule ^contact/?$ contact.html [L]
   RewriteRule ^unibank/?$ unibank.html [L]
   RewriteRule ^mandrillaz/?$ mandrillaz.html [L]
@@ -33,6 +33,7 @@ AddType font/ttf .ttf
 AddType font/woff2 .woff2
 AddType application/xml .xml
 AddType text/plain .txt
+AddType text/markdown .md
 
 <IfModule mod_headers.c>
   <FilesMatch "\.(?:webp|svg|gif|jpg|jpeg|png|mp4|webm|mp3|woff2|ttf)$">
@@ -43,7 +44,7 @@ AddType text/plain .txt
     Header set Cache-Control "public, max-age=604800"
   </FilesMatch>
 
-  <FilesMatch "\.(?:html|txt|xml)$">
+  <FilesMatch "\.(?:html|txt|md|xml)$">
     Header set Cache-Control "public, max-age=300, must-revalidate"
   </FilesMatch>
 </IfModule>
@@ -65,6 +66,7 @@ AddType text/plain .txt
   ExpiresByType text/javascript "access plus 7 days"
   ExpiresByType text/html "access plus 5 minutes"
   ExpiresByType text/plain "access plus 5 minutes"
+  ExpiresByType text/markdown "access plus 5 minutes"
   ExpiresByType application/xml "access plus 5 minutes"
 </IfModule>
 

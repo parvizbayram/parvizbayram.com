@@ -34,7 +34,9 @@ deployment:
     - /bin/cp next-project.js $DEPLOYPATH
     - /bin/cp title-status.js $DEPLOYPATH
     - /bin/cp robots.txt $DEPLOYPATH
+    - /bin/cp llms.txt $DEPLOYPATH
     - /bin/cp sitemap.xml $DEPLOYPATH
-    - /bin/rm -rf ${DEPLOYPATH}assets ${DEPLOYPATH}fonts
+    - /bin/rm -rf ${DEPLOYPATH}assets ${DEPLOYPATH}fonts ${DEPLOYPATH}content
     - /bin/cp -R assets $DEPLOYPATH
     - /bin/cp -R fonts $DEPLOYPATH
+    - /bin/cp -R content $DEPLOYPATH

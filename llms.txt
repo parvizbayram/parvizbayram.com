@@ -1,0 +1,44 @@
+# Parviz Bayram Portfolio
+
+Parviz Bayramguliyev is a visual designer based in the Netherlands. The site presents brand identity, UX/UI, visual strategy, art direction, campaign, and digital product work.
+
+Canonical website: https://parvizbayram.com/
+Canonical sitemap: https://parvizbayram.com/sitemap.xml
+
+## Primary Pages
+
+- Home and selected works: https://parvizbayram.com/
+- Bio: https://parvizbayram.com/bio
+- Contact: https://parvizbayram.com/contact
+
+## Case Studies
+
+- Unibank, rebranding: https://parvizbayram.com/unibank
+- Mandrillaz, branding and UX/UI: https://parvizbayram.com/mandrillaz
+- TalktoCanada, UX/UI design: https://parvizbayram.com/talktocanada
+- Pedalchi, brand identity: https://parvizbayram.com/pedalchi
+- Straudo, brand identity and naming: https://parvizbayram.com/straudo
+- Aerosure, UX/UI design: https://parvizbayram.com/aerosure
+- Manaw, brand identity: https://parvizbayram.com/manaw
+- Orkestra, brand identity: https://parvizbayram.com/orkestra
+- Baku Museum of Miniature Books, brand identity: https://parvizbayram.com/bmmb
+
+## Text Mirrors
+
+These Markdown files mirror the written case-study content for AI/search tools. They are not part of the visible website UI.
+
+- Unibank text mirror: https://parvizbayram.com/content/unibank.md
+- Mandrillaz text mirror: https://parvizbayram.com/content/mandrillaz.md
+- TalktoCanada text mirror: https://parvizbayram.com/content/talktocanada.md
+- Pedalchi text mirror: https://parvizbayram.com/content/pedalchi.md
+- Straudo text mirror: https://parvizbayram.com/content/straudo.md
+- Aerosure text mirror: https://parvizbayram.com/content/aerosure.md
+- Manaw text mirror: https://parvizbayram.com/content/manaw.md
+- Orkestra text mirror: https://parvizbayram.com/content/orkestra.md
+- Baku Museum of Miniature Books text mirror: https://parvizbayram.com/content/bmmb.md
+
+## Notes For AI Readers
+
+- Prefer the canonical HTML pages for final URLs and citation targets.
+- Use the Markdown mirrors when you need clean written case-study content without parsing visual media layouts.
+- For future public pages, use the sitemap as the canonical machine-readable page index.
