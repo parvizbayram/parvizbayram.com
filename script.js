@@ -653,7 +653,7 @@ const ROUTE_META = {
     url: "https://parvizbayram.com/",
   },
   [ROUTE_BIO]: {
-    title: "Parviz's bio",
+    title: "Parviz's Bio",
     description: "Bio of Parviz Bayram, a visual designer based in the Netherlands with experience across brand identity, UX/UI, visual strategy, art direction, and digital design.",
     url: "https://parvizbayram.com/bio",
   },
@@ -708,6 +708,53 @@ function hydrateRouteAssetsFor(route) {
       image.setAttribute("src", image.dataset.routeSrc);
     }
   });
+}
+
+function hydrateInlineRouteAssets(root = document) {
+  root.querySelectorAll("img[data-route-src]").forEach((image) => {
+    if (!image.getAttribute("src")) {
+      image.setAttribute("src", image.dataset.routeSrc);
+    }
+  });
+}
+
+function hasSpaRoutePanels() {
+  return Boolean(
+    document.querySelector('.route-panel[data-route-panel="main"]') &&
+    document.querySelector('.route-panel[data-route-panel="bio"]')
+  );
+}
+
+function resetBioTransitionState() {
+  document.documentElement.classList.remove(
+    "has-pending-bio-entry",
+    "is-route-transitioning",
+    "is-route-main-to-bio",
+    "is-route-bio-to-main",
+    "is-main-bg-front"
+  );
+  document.querySelector(".bio-photo")?.classList.remove("is-photo-transition-hidden");
+}
+
+function initStandaloneBioPage() {
+  document.documentElement.dataset.route = ROUTE_BIO;
+  document.documentElement.classList.add("route-bio");
+  document.documentElement.classList.remove("route-main");
+  document.body.dataset.route = ROUTE_BIO;
+  document.body.classList.add("bio-body");
+  document.body.classList.remove("main-body", "is-page-entering");
+  hydrateInlineRouteAssets();
+  resetBioTransitionState();
+  syncPageScale();
+  syncHeroLockupMetrics();
+  initBioScrollControls();
+  initBioScrollText();
+  window.addEventListener("resize", () => {
+    syncPageScale();
+    syncHeroLockupMetrics();
+    requestBioScrollSync();
+  });
+  document.documentElement.classList.add("is-ready");
 }
 
 function consumeBioEntryTransitionIntent() {
@@ -2361,6 +2408,7 @@ function playInitialBioEntryTransition(intent) {
 function animateRouteTransition(fromRoute, toRoute, sharedTransition = null, photoTransition = null, backgroundTransition = null, onComplete = null) {
   const fromPanel = getRoutePanel(fromRoute);
   const toPanel = getRoutePanel(toRoute);
+  const routeDirectionClass = `is-route-${fromRoute}-to-${toRoute}`;
 
   if (!fromPanel || !toPanel) {
     routeTransitioning = false;
@@ -2379,12 +2427,14 @@ function animateRouteTransition(fromRoute, toRoute, sharedTransition = null, pho
   resetRoutePanelStyles(fromPanel);
   resetRoutePanelStyles(toPanel);
   document.documentElement.classList.add("is-route-transitioning");
+  document.documentElement.classList.add(routeDirectionClass);
 
   const transitionTasks = [sharedTransition?.play(), photoTransition?.play(), backgroundTransition?.play()]
     .filter((task) => task && typeof task.then === "function");
 
   if (!transitionTasks.length) {
     document.documentElement.classList.remove("is-route-transitioning");
+    document.documentElement.classList.remove(routeDirectionClass);
     syncRouteBackgroundOpacity(toRoute);
     routeTransitioning = false;
     onComplete?.();
@@ -2393,6 +2443,7 @@ function animateRouteTransition(fromRoute, toRoute, sharedTransition = null, pho
 
   Promise.all(transitionTasks).finally(() => {
     document.documentElement.classList.remove("is-route-transitioning");
+    document.documentElement.classList.remove(routeDirectionClass);
     syncRouteBackgroundOpacity(toRoute);
     routeTransitioning = false;
     onComplete?.();
@@ -2630,8 +2681,12 @@ if (Number.isFinite(savedWorksPosition)) {
   loopOffset = savedWorksPosition;
 }
 
+const spaRoutePanelsAvailable = hasSpaRoutePanels();
+
 if (isPhoneOnlyExperience()) {
   document.documentElement.classList.add("is-ready");
+} else if (!spaRoutePanelsAvailable) {
+  initStandaloneBioPage();
 } else {
   hydrateRouteAssetsFor(currentRoute);
   syncPageScale();
