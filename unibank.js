@@ -506,7 +506,11 @@
         return;
       }
 
+      const source = iframe.getAttribute("src") || "";
+      const isPlayableVideo = !source.includes("background=1") && !source.includes("controls=0");
       wrapper.dataset.socialVideoIndex = String(index + 1);
+      wrapper.classList.toggle("is-vimeo-playable", isPlayableVideo);
+
       const clickLayer = document.createElement("span");
       clickLayer.className = "social-video-click-layer";
       clickLayer.setAttribute("aria-hidden", "true");
@@ -517,6 +521,18 @@
         });
       });
       wrapper.appendChild(clickLayer);
+
+      if (!isPlayableVideo || !window.Vimeo?.Player) {
+        return;
+      }
+
+      const player = new window.Vimeo.Player(iframe);
+      player.on("play", () => {
+        window.trackPortfolioEvent?.("unibank_social_vimeo_click", {
+          video_index: index + 1,
+          video_title: iframe.getAttribute("title") || ""
+        });
+      });
     });
   }
 

@@ -36,18 +36,98 @@ function getActiveHeroTitleElement() {
   return document.querySelector(".route-main .hero-title") || document.querySelector(".hero-title");
 }
 
-function syncHeroLockupMetrics() {
+function getActiveHeroCopyElement() {
+  const route = document.documentElement.dataset.route;
+
+  if (route === "bio") {
+    return document.querySelector(".route-bio .bio-hero-copy") || document.querySelector(".bio-hero-copy");
+  }
+
+  return document.querySelector(".route-main .hero-copy") || document.querySelector(".hero-copy");
+}
+
+function getRangeRectForNode(node) {
+  if (!node) {
+    return null;
+  }
+
+  const range = document.createRange();
+  range.selectNodeContents(node);
+  const rect = range.getBoundingClientRect();
+  range.detach();
+
+  return rect.width || rect.height ? rect : null;
+}
+
+function getFirstCopyTextNode(copy) {
+  const anchor = copy?.querySelector(".hero-copy-anchor");
+
+  if (!anchor) {
+    return null;
+  }
+
+  return Array.from(anchor.childNodes).find((node) => (
+    node.nodeType === Node.TEXT_NODE && node.textContent.trim()
+  )) || null;
+}
+
+function getTextBaselineY(element, node, rect, context) {
+  const text = (node?.textContent || "").trim();
+
+  if (!element || !text || !context) {
+    return rect.bottom;
+  }
+
+  const style = window.getComputedStyle(element);
+  context.font = `${style.fontStyle} ${style.fontVariant} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+  const metrics = context.measureText(text);
+  const descent = Number.isFinite(metrics.actualBoundingBoxDescent)
+    ? metrics.actualBoundingBoxDescent
+    : 0;
+
+  return rect.bottom - descent;
+}
+
+function syncMeasuredHeroCopyRowOffset(context) {
   const root = document.documentElement;
+  root.style.removeProperty("--measured-hero-copy-row-offset");
 
   if (!shortHeroLockupQuery.matches) {
-    root.style.removeProperty("--short-hero-title-measured-width");
     return;
   }
 
   const title = getActiveHeroTitleElement();
+  const copy = getActiveHeroCopyElement();
+  const copyTextNode = getFirstCopyTextNode(copy);
+  const titleRect = getRangeRectForNode(title);
+  const copyRect = getRangeRectForNode(copyTextNode);
+
+  if (!title || !copy || !copyTextNode || !titleRect || !copyRect) {
+    return;
+  }
+
+  const scale = syncPageScale();
+  const currentOffset = (copyRect.top - titleRect.top) / scale;
+  const baselineDelta = (
+    getTextBaselineY(title, title.firstChild, titleRect, context) -
+    getTextBaselineY(copy, copyTextNode, copyRect, context)
+  ) / scale;
+  const nextOffset = Math.max(0, currentOffset + baselineDelta);
+
+  if (Number.isFinite(nextOffset)) {
+    root.style.setProperty("--measured-hero-copy-row-offset", `${nextOffset.toFixed(2)}px`);
+  }
+}
+
+function syncHeroLockupMetrics() {
+  const root = document.documentElement;
+  const title = getActiveHeroTitleElement();
   const text = (title?.textContent || "").trim();
 
   if (!title || !text) {
+    root.style.removeProperty("--hero-title-measured-width");
+    root.style.removeProperty("--short-hero-title-measured-width");
+    root.style.removeProperty("--measured-hero-copy-row-offset");
     return;
   }
 
@@ -58,6 +138,7 @@ function syncHeroLockupMetrics() {
     return;
   }
 
+  syncMeasuredHeroCopyRowOffset(context);
   context.font = `${style.fontStyle} ${style.fontVariant} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
 
   const metrics = context.measureText(text);
@@ -72,7 +153,12 @@ function syncHeroLockupMetrics() {
   const width = Math.ceil(measuredTextWidth + letterSpacingWidth);
 
   if (width > 0) {
-    root.style.setProperty("--short-hero-title-measured-width", `${width}px`);
+    root.style.setProperty("--hero-title-measured-width", `${width}px`);
+    if (shortHeroLockupQuery.matches) {
+      root.style.setProperty("--short-hero-title-measured-width", `${width}px`);
+    } else {
+      root.style.removeProperty("--short-hero-title-measured-width");
+    }
   }
 }
 
@@ -667,6 +753,8 @@ const SHARED_TRANSITION_SELECTORS = [
   ".route-bio .bio-hero-title",
   ".route-main .hero-copy",
   ".route-bio .bio-hero-copy",
+  ".route-main .hero-lockup-image",
+  ".route-bio .bio-hero-lockup-image",
 ];
 let currentRoute = getRouteFromPath(window.location.pathname);
 let routeTransitioning = false;
@@ -754,6 +842,13 @@ function initStandaloneBioPage() {
     syncHeroLockupMetrics();
     requestBioScrollSync();
   });
+  if (document.fonts?.ready) {
+    document.fonts.ready
+      .then(() => {
+        syncHeroLockupMetrics();
+      })
+      .catch(() => {});
+  }
   document.documentElement.classList.add("is-ready");
 }
 
@@ -1993,10 +2088,8 @@ function getTransitionEndpoints(fromRoute, toRoute) {
   const heyTo = toRoute === ROUTE_MAIN ? ".intro-mark" : ".bio-intro-mark";
   const backFrom = fromRoute === ROUTE_MAIN ? ".route-main .back-home" : ".route-bio-header .bio-back-home";
   const backTo = toRoute === ROUTE_MAIN ? ".route-main .back-home" : ".route-bio-header .bio-back-home";
-  const titleFrom = fromRoute === ROUTE_MAIN ? ".route-main .hero-title" : ".route-bio .bio-hero-title";
-  const titleTo = toRoute === ROUTE_MAIN ? ".route-main .hero-title" : ".route-bio .bio-hero-title";
-  const copyFrom = fromRoute === ROUTE_MAIN ? ".route-main .hero-copy" : ".route-bio .bio-hero-copy";
-  const copyTo = toRoute === ROUTE_MAIN ? ".route-main .hero-copy" : ".route-bio .bio-hero-copy";
+  const lockupFrom = fromRoute === ROUTE_MAIN ? ".route-main .hero-lockup-image" : ".route-bio .bio-hero-lockup-image";
+  const lockupTo = toRoute === ROUTE_MAIN ? ".route-main .hero-lockup-image" : ".route-bio .bio-hero-lockup-image";
 
   return [
     {
@@ -2017,15 +2110,8 @@ function getTransitionEndpoints(fromRoute, toRoute) {
     },
     {
       className: "transition-title",
-      fromSelector: titleFrom,
-      toSelector: titleTo,
-      fromOpacity: 1,
-      toOpacity: 1,
-    },
-    {
-      className: "transition-copy",
-      fromSelector: copyFrom,
-      toSelector: copyTo,
+      fromSelector: lockupFrom,
+      toSelector: lockupTo,
       fromOpacity: 1,
       toOpacity: 1,
     },
