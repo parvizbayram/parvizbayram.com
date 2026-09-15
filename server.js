@@ -139,7 +139,7 @@ const server = http.createServer((request, response) => {
     safePath === "/"
       ? "index.html"
       : safePath === "/bio" || safePath === "/bio/"
-        ? "bio.html"
+        ? "index.html"
       : safePath === "/contact" || safePath === "/contact/"
         ? "contact.html"
         : safePath === "/unibank" || safePath === "/unibank/"
