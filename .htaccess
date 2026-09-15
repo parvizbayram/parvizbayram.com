@@ -6,7 +6,7 @@ ErrorDocument 403 /404.html
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-  RewriteRule ^bio/?$ bio.html [L]
+  RewriteRule ^bio/?$ index.html [L]
   RewriteRule ^contact/?$ contact.html [L]
   RewriteRule ^unibank/?$ unibank.html [L]
   RewriteRule ^mandrillaz/?$ mandrillaz.html [L]
