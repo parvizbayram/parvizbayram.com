@@ -2603,6 +2603,21 @@ function navigateToRoute(route, options = {}) {
     });
 }
 
+function navigateFromBioToWorks() {
+  if (bioWorksNavigating || routeTransitioning) {
+    return;
+  }
+
+  bioWorksNavigating = true;
+  smoothScrollToTop(1000)
+    .then(() => {
+      navigateToRoute(ROUTE_MAIN, { revealWorks: true });
+    })
+    .finally(() => {
+      bioWorksNavigating = false;
+    });
+}
+
 function initSpaRouting() {
   const handleRouteClick = (event) => {
     const anchor = event.target.closest("a");
@@ -2621,14 +2636,7 @@ function initSpaRouting() {
       }
 
       window.trackPortfolioEvent?.("bio_check_works_click");
-      bioWorksNavigating = true;
-      smoothScrollToTop(1000)
-        .then(() => {
-          navigateToRoute(ROUTE_MAIN, { revealWorks: true });
-        })
-        .finally(() => {
-          bioWorksNavigating = false;
-        });
+      navigateFromBioToWorks();
       return;
     }
 
@@ -2684,6 +2692,11 @@ function initSpaRouting() {
     }
 
     if (nextRoute === ROUTE_MAIN && url.hash === "#works") {
+      if (currentRoute === ROUTE_BIO) {
+        navigateFromBioToWorks();
+        return;
+      }
+
       navigateToRoute(nextRoute, { revealWorks: true });
       return;
     }
