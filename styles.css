@@ -5710,3 +5710,65 @@ html.has-pending-bio-entry .bio-photo {
     padding-right: 0;
   }
 }
+
+/* Ultrawide desktop hero: preserve the full Bio portrait and use the one-line lockup. */
+@media (min-width: 2560px) and (min-aspect-ratio: 21 / 9) {
+  :root {
+    --ultrawide-hero-lockup-width: 1800px;
+    --ultrawide-lockup-visible-left-offset: 6px;
+    --hero-lockup-width: var(--ultrawide-hero-lockup-width);
+    --hero-lockup-height: calc(var(--hero-lockup-width) * 0.0594559);
+    --ultrawide-bio-photo-height: 450px;
+    --ultrawide-bio-intro-size: 48px;
+    --ultrawide-bio-intro-line: calc(var(--ultrawide-bio-intro-size) * 1.18);
+    --ultrawide-bio-intro-top: calc(
+      var(--bio-photo-top) + var(--ultrawide-bio-photo-height) + 34px
+    );
+    --ultrawide-bio-lockup-top: calc(
+      var(--ultrawide-bio-intro-top) + var(--ultrawide-bio-intro-line) + 13px
+    );
+  }
+
+  html.route-main .intro-mark,
+  html[data-route="main"] .intro-mark,
+  html.route-bio .bio-intro-mark,
+  html[data-route="bio"] .bio-intro-mark,
+  body.bio-body .bio-intro-mark {
+    font-size: var(--ultrawide-bio-intro-size);
+  }
+
+  html.route-main .hero-lockup-image,
+  html[data-route="main"] .hero-lockup-image,
+  html.route-bio .bio-hero-lockup-image,
+  html[data-route="bio"] .bio-hero-lockup-image,
+  body.bio-body .bio-hero-lockup-image {
+    content: url("/assets/shared/visual-designer-based-long.webp");
+    width: var(--ultrawide-hero-lockup-width);
+    left: calc(var(--hero-lockup-left-shift) + var(--ultrawide-lockup-visible-left-offset));
+  }
+
+  html.route-bio .bio-photo,
+  html[data-route="bio"] .bio-photo,
+  body.bio-body .bio-photo {
+    height: var(--ultrawide-bio-photo-height);
+  }
+
+  html.route-bio .bio-photo img,
+  html[data-route="bio"] .bio-photo img,
+  body.bio-body .bio-photo img {
+    top: -100px;
+  }
+
+  html.route-bio .bio-intro-mark,
+  html[data-route="bio"] .bio-intro-mark,
+  body.bio-body .bio-intro-mark {
+    top: var(--ultrawide-bio-intro-top);
+    line-height: 1.18;
+  }
+
+  html.route-bio .bio-hero-lockup-image,
+  html[data-route="bio"] .bio-hero-lockup-image,
+  body.bio-body .bio-hero-lockup-image {
+    top: var(--ultrawide-bio-lockup-top);
+  }
+}
