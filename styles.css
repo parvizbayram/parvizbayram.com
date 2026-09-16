@@ -5713,6 +5713,10 @@ html.has-pending-bio-entry .bio-photo {
 
 /* Ultrawide desktop hero: preserve the full Bio portrait and use the one-line lockup. */
 @media (min-width: 2560px) and (min-aspect-ratio: 21 / 9) {
+  .contact-shell {
+    min-height: 0;
+  }
+
   :root {
     --ultrawide-hero-lockup-width: 1800px;
     --ultrawide-lockup-visible-left-offset: 6px;
